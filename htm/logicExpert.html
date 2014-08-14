@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#專家系統---以-javascript-實作">專家系統 - 以 JavaScript 實作</a></li>
+</ul>
+</div>
+<h2 id="專家系統---以-javascript-實作"><a href="#專家系統---以-javascript-實作">專家系統 - 以 JavaScript 實作</a></h2>
+<h3 id="前向推論程式"><a href="#前向推論程式">前向推論程式</a></h3>
+<p>以下是一個代表鴕鳥的動物世界規則庫。</p>
+<p>規則庫：animal_ostrich.kb</p>
+<pre><code>哺乳類 &lt;= 有毛. 
+哺乳類 &lt;= 泌乳. 
+鳥類   &lt;= 有羽毛. 
+鳥類   &lt;= 會飛 &amp; 生蛋. 
+食肉類 &lt;= 哺乳類 &amp; 吃肉.
+食肉類 &lt;= 有爪 &amp; 利齒 &amp; 兩眼前視.
+有蹄類 &lt;= 哺乳類 &amp; 有蹄.
+偶蹄類 &lt;= 哺乳類 &amp; 反芻.
+獵豹   &lt;= 哺乳類 &amp; 吃肉 &amp; 斑點.
+老虎   &lt;= 哺乳類 &amp; 吃肉 &amp; 條紋.
+長頸鹿 &lt;= 有蹄類 &amp; 長腿 &amp; 斑點.
+斑馬   &lt;= 有蹄類 &amp; 條紋.
+鴕鳥   &lt;= 鳥類 &amp; 長腿.
+
+會飛. 
+生蛋. 
+長腿. </code></pre>
+<p>接著我們採用前述的「布林邏輯推論引擎 kb.js」，透過讀入規則檔並進行推論的方式，設計出「前向推論」的程式。</p>
+<p>檔案：kbReason.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> fs = <span class="fu">require</span>(<span class="st">&#39;fs&#39;</span>); <span class="co">// 引用檔案物件</span>
+<span class="kw">var</span> kb = <span class="fu">require</span>(<span class="st">&#39;./kb&#39;</span>);
+
+<span class="kw">var</span> kb1 = <span class="kw">new</span> <span class="fu">kb</span>();
+<span class="kw">var</span> code = <span class="ot">fs</span>.<span class="fu">readFileSync</span>(<span class="ot">process</span>.<span class="fu">argv</span>[<span class="dv">2</span>], <span class="st">&quot;utf8&quot;</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="bn">\n</span><span class="ot">/gi</span>, <span class="st">&quot;&quot;</span>); <span class="co">// 讀取檔案</span>
+
+<span class="ot">kb1</span>.<span class="fu">load</span>(code);
+<span class="ot">kb1</span>.<span class="fu">forwardChaining</span>();</code></pre>
+<p>以下是上述「隱含鴕鳥前提」的規則庫經過「前向布林引擎」推論後得到的執行結果。</p>
+<pre><code>C:\Dropbox\Public\web\ai\code\KB&gt;node kbReason animal_ostrich.kb
+[&quot;哺乳類 &lt;= 有毛&quot;,&quot;哺乳類 &lt;= 泌乳&quot;,&quot;鳥類   &lt;= 有羽毛&quot;,&quot;鳥類   &lt;= 會飛 &amp; 生蛋&quot;,&quot;
+食肉類 &lt;= 哺乳類 &amp; 吃肉&quot;,&quot;食肉類 &lt;= 有爪 &amp; 利齒 &amp; 兩眼前視&quot;,&quot;有蹄類 &lt;= 哺乳類 &amp;
+有蹄&quot;,&quot;偶蹄類 &lt;= 哺乳類 &amp; 反芻&quot;,&quot;獵豹   &lt;= 哺乳類 &amp; 吃肉 &amp; 斑點&quot;,&quot;老虎   &lt;= 哺乳
+類 &amp; 吃肉 &amp; 條紋&quot;,&quot;長頸鹿 &lt;= 有蹄類 &amp; 長腿 &amp; 斑點&quot;,&quot;斑馬   &lt;= 有蹄類 &amp; 條紋&quot;,&quot;鴕
+鳥   &lt;= 鳥類 &amp; 長腿&quot;,&quot;會飛&quot;,&quot;生蛋&quot;,&quot;長腿&quot;,&quot;&quot;]
+rule:head=哺乳類 terms=[&quot;有毛&quot;]
+rule:head=哺乳類 terms=[&quot;泌乳&quot;]
+rule:head=鳥類 terms=[&quot;有羽毛&quot;]
+rule:head=鳥類 terms=[&quot;會飛 &quot;,&quot; 生蛋&quot;]
+rule:head=食肉類 terms=[&quot;哺乳類 &quot;,&quot; 吃肉&quot;]
+rule:head=食肉類 terms=[&quot;有爪 &quot;,&quot; 利齒 &quot;,&quot; 兩眼前視&quot;]
+rule:head=有蹄類 terms=[&quot;哺乳類 &quot;,&quot; 有蹄&quot;]
+rule:head=偶蹄類 terms=[&quot;哺乳類 &quot;,&quot; 反芻&quot;]
+rule:head=獵豹 terms=[&quot;哺乳類 &quot;,&quot; 吃肉 &quot;,&quot; 斑點&quot;]
+rule:head=老虎 terms=[&quot;哺乳類 &quot;,&quot; 吃肉 &quot;,&quot; 條紋&quot;]
+rule:head=長頸鹿 terms=[&quot;有蹄類 &quot;,&quot; 長腿 &quot;,&quot; 斑點&quot;]
+rule:head=斑馬 terms=[&quot;有蹄類 &quot;,&quot; 條紋&quot;]
+rule:head=鴕鳥 terms=[&quot;鳥類 &quot;,&quot; 長腿&quot;]
+rule:head=會飛 terms=&quot;&quot;
+rule:head=生蛋 terms=&quot;&quot;
+rule:head=長腿 terms=&quot;&quot;
+addFact(會飛)
+addFact(生蛋)
+addFact(長腿)
+addFact(鳥類)
+addFact(鴕鳥)
+facts=[&quot;會飛&quot;,&quot;生蛋&quot;,&quot;長腿&quot;,&quot;鳥類&quot;,&quot;鴕鳥&quot;]</code></pre>
+<h3 id="互動式推論"><a href="#互動式推論">互動式推論</a></h3>
+<p>當然、我們不一定要將「隱含前提」直接寫死在規則庫當中，也可以透過互動的方式讓使用者輸入這些「隱含前提」，透過互動的方式讓「推理引擎」推論出結果，以下是這種互動式推論的一個執行範例。</p>
+<p>首先、我們只要將以下的動物世界推論規則放在 animal.kb 規則檔中。</p>
+<pre><code>哺乳類 &lt;= 有毛. 
+哺乳類 &lt;= 泌乳. 
+鳥類   &lt;= 有羽毛. 
+鳥類   &lt;= 會飛 &amp; 生蛋. 
+食肉類 &lt;= 哺乳類 &amp; 吃肉.
+食肉類 &lt;= 有爪 &amp; 利齒 &amp; 兩眼前視.
+有蹄類 &lt;= 哺乳類 &amp; 有蹄.
+偶蹄類 &lt;= 哺乳類 &amp; 反芻.
+獵豹   &lt;= 哺乳類 &amp; 吃肉 &amp; 斑點.
+老虎   &lt;= 哺乳類 &amp; 吃肉 &amp; 條紋.
+長頸鹿 &lt;= 有蹄類 &amp; 長腿 &amp; 斑點.
+斑馬   &lt;= 有蹄類 &amp; 條紋.
+鴕鳥   &lt;= 鳥類 &amp; 長腿.</code></pre>
+<p>接著撰寫一個通用的推論程式 kbQuery.js，其原始碼如下所示：</p>
+<p>檔案：kbQuery.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> fs = <span class="fu">require</span>(<span class="st">&#39;fs&#39;</span>); <span class="co">// 引用檔案物件</span>
+<span class="kw">var</span> kb = <span class="fu">require</span>(<span class="st">&#39;./kb&#39;</span>);
+
+<span class="kw">var</span> kb1 = <span class="kw">new</span> <span class="fu">kb</span>();
+<span class="kw">var</span> code = <span class="ot">fs</span>.<span class="fu">readFileSync</span>(<span class="ot">process</span>.<span class="fu">argv</span>[<span class="dv">2</span>], <span class="st">&quot;utf8&quot;</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="bn">\n</span><span class="ot">/gi</span>, <span class="st">&quot;&quot;</span>); <span class="co">// 讀取檔案</span>
+<span class="ot">kb1</span>.<span class="fu">load</span>(code);
+<span class="ot">kb1</span>.<span class="fu">forwardChaining</span>();
+
+<span class="kw">var</span> r = <span class="fu">require</span>(<span class="st">&#39;readline&#39;</span>).<span class="fu">createInterface</span>(<span class="ot">process</span>.<span class="fu">stdin</span>, <span class="ot">process</span>.<span class="fu">stdout</span>);
+<span class="ot">r</span>.<span class="fu">setPrompt</span>(<span class="st">&#39;?- &#39;</span>);
+<span class="ot">r</span>.<span class="fu">prompt</span>();
+
+<span class="ot">r</span>.<span class="fu">on</span>(<span class="st">&#39;line&#39;</span>, <span class="kw">function</span>(line) {
+  <span class="kw">var</span> term = <span class="ot">line</span>.<span class="fu">trim</span>();
+  <span class="ot">kb1</span>.<span class="fu">addFact</span>(term);
+  <span class="ot">kb1</span>.<span class="fu">forwardChaining</span>();
+  <span class="ot">r</span>.<span class="fu">prompt</span>();
+}).<span class="fu">on</span>(<span class="st">&#39;close&#39;</span>, <span class="kw">function</span>() {
+  <span class="ot">process</span>.<span class="fu">exit</span>(<span class="dv">0</span>);
+});</code></pre>
+<p>然後、我們就可以透過互動的方式，輸入指定的前提，推理系統將會適時推論出我們想要查詢的動物，以下是一個執行的過程範例。</p>
+<pre><code>C:\Dropbox\Public\web\ai\code\KB&gt;node kbQuery animal.kb
+[&quot;哺乳類 &lt;= 有毛&quot;,&quot;哺乳類 &lt;= 泌乳&quot;,&quot;鳥類   &lt;= 有羽毛&quot;,&quot;鳥類   &lt;= 會飛 &amp; 生蛋&quot;,&quot;
+食肉類 &lt;= 哺乳類 &amp; 吃肉&quot;,&quot;食肉類 &lt;= 有爪 &amp; 利齒 &amp; 兩眼前視&quot;,&quot;有蹄類 &lt;= 哺乳類 &amp;
+有蹄&quot;,&quot;偶蹄類 &lt;= 哺乳類 &amp; 反芻&quot;,&quot;獵豹   &lt;= 哺乳類 &amp; 吃肉 &amp; 斑點&quot;,&quot;老虎   &lt;= 哺乳
+類 &amp; 吃肉 &amp; 條紋&quot;,&quot;長頸鹿 &lt;= 有蹄類 &amp; 長腿 &amp; 斑點&quot;,&quot;斑馬   &lt;= 有蹄類 &amp; 條紋&quot;,&quot;鴕
+鳥   &lt;= 鳥類 &amp; 長腿&quot;,&quot;&quot;]
+rule:head=哺乳類 terms=[&quot;有毛&quot;]
+rule:head=哺乳類 terms=[&quot;泌乳&quot;]
+rule:head=鳥類 terms=[&quot;有羽毛&quot;]
+rule:head=鳥類 terms=[&quot;會飛 &quot;,&quot; 生蛋&quot;]
+rule:head=食肉類 terms=[&quot;哺乳類 &quot;,&quot; 吃肉&quot;]
+rule:head=食肉類 terms=[&quot;有爪 &quot;,&quot; 利齒 &quot;,&quot; 兩眼前視&quot;]
+rule:head=有蹄類 terms=[&quot;哺乳類 &quot;,&quot; 有蹄&quot;]
+rule:head=偶蹄類 terms=[&quot;哺乳類 &quot;,&quot; 反芻&quot;]
+rule:head=獵豹 terms=[&quot;哺乳類 &quot;,&quot; 吃肉 &quot;,&quot; 斑點&quot;]
+rule:head=老虎 terms=[&quot;哺乳類 &quot;,&quot; 吃肉 &quot;,&quot; 條紋&quot;]
+rule:head=長頸鹿 terms=[&quot;有蹄類 &quot;,&quot; 長腿 &quot;,&quot; 斑點&quot;]
+rule:head=斑馬 terms=[&quot;有蹄類 &quot;,&quot; 條紋&quot;]
+rule:head=鴕鳥 terms=[&quot;鳥類 &quot;,&quot; 長腿&quot;]
+facts=[]
+?- 有毛
+addFact(有毛)
+addFact(哺乳類)
+facts=[&quot;有毛&quot;,&quot;哺乳類&quot;]
+?- 吃肉
+addFact(吃肉)
+addFact(食肉類)
+facts=[&quot;有毛&quot;,&quot;哺乳類&quot;,&quot;吃肉&quot;,&quot;食肉類&quot;]
+?- 條紋
+addFact(條紋)
+addFact(老虎)
+facts=[&quot;有毛&quot;,&quot;哺乳類&quot;,&quot;吃肉&quot;,&quot;食肉類&quot;,&quot;條紋&quot;,&quot;老虎&quot;]
+?-</code></pre>
+<p>您可以看到當我們輸入了「有毛、吃肉、條紋」等三個屬性之後，系統推論出了「老虎」這個結論，這正式動物世界專家系統所應該傳回的結果，不是嗎？</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

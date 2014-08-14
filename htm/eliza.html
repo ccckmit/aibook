@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作中文版-eliza-聊天程式">實作：中文版 Eliza 聊天程式</a></li>
+</ul>
+</div>
+<h2 id="實作中文版-eliza-聊天程式"><a href="#實作中文版-eliza-聊天程式">實作：中文版 Eliza 聊天程式</a></h2>
+<p>Eliza 是最早出現的聊天程式之一，該程式曾經成功的欺騙過不少人，讓人們以為他們聊天的對象是真人。</p>
+<h3 id="前言"><a href="#前言">前言</a></h3>
+<p>在 1950 年時『資訊科學領域的開山始祖』「艾倫、圖靈」(Alan Turing) 就曾經提出一個稱為「圖靈測試」 (Turing Test) 的測驗，用來檢驗「一台電腦是否具有智慧」這件事情， 其方法很容易理解，現代的讀者可以想像當有個陌生人連進來與你做 MSN 或 facebook 訊息的交談時，您必須判斷對方到底是一個真人，或者只是一支「聊天程式」，假如有個程式厲害到 讓人判斷不出來，那麼這個程式就通過了 「圖靈測試」 。</p>
+<p>在 Alan Turing 想出「圖靈測試」這個檢驗方法之後，很多人就開始想如何才能做出這樣一台有智慧的電腦， 一支有智慧的程式呢？這個問題在 1964 被 MIT 的 Joseph Weizenbaum 用一個非常投機取巧的方式，設計出了 一支稱為 <a href="http://en.wikipedia.org/wiki/ELIZA">Eliza</a> 的聊天程式，不算完整的解決了「圖靈測試」這個問題。</p>
+<p>事實上、<a href="http://en.wikipedia.org/wiki/ELIZA">Eliza</a> 可以說是一支很擅長呼攏欺騙的程式，如果翻譯成中文來看，他其實幾乎都用那些 寒暄招呼語，以及模擬兩可的用語在與人對談，例如「你好嗎？」、「請繼續」...，另外、如果你談到「父母兄弟姊妹...」， 他就說「可以多和我聊聊有關你家人的事情嗎？」之類的泛用語， Eliza 甚至會利用樣式比對取出你的一些話後 來回答你，例如你如果說：「我心情不好！」，Eliza 就會回答說：「為何你心情不好？」，其中的 (心情不好) 這幾個字是從你的問句中用「我 * 」的方式取出來的。</p>
+<h3 id="使用畫面"><a href="#使用畫面">使用畫面</a></h3>
+<p>以下是筆者自己與聊天程式對談的一個聊天過程的畫面，當您輸入完每一句後請按下 「enter 鍵」或「送出鈕」，等待程式回答。</p>
+<div class="figure">
+<img src="../img/eliza_talkto2.png" alt="圖、與本聊天程式對談的畫面" /><p class="caption">圖、與本聊天程式對談的畫面</p>
+</div>
+<p>如果想試用一下這個程式，可以連線到筆者的下列網頁，試著與「中文網頁版的 Eliza」 聊聊天。</p>
+<ul>
+<li><a href="https://dl.dropboxusercontent.com/u/101584453/web/ai/code/eliza/talkto.htm">https://dl.dropboxusercontent.com/u/101584453/web/ai/code/eliza/talkto.htm</a></li>
+</ul>
+<h3 id="原始程式碼talkto.htm"><a href="#原始程式碼talkto.htm">原始程式碼：talkto.htm</a></h3>
+<p>這個程式的運作原裏很簡單，程式裏的 qaList 變數是一個 Q&amp;A 陣列，當某個 Q 欄位中的詞彙 (或樣式) 出現在使用者輸入的文句中時，就會被觸發，然後程式會從 A 欄位隨機選出一個答案，來回答使用者。 舉例而言，當您輸入：</p>
+<blockquote>
+<p>我不開心</p>
+</blockquote>
+<p>這句話時，程式就會比對 qaList 中的樣式，發現以下 QA 物件中的「不」出現在「我不開心」這個句子裏， 於是就觸發了這個規則</p>
+<p>{ Q:&quot;不&quot;, A:&quot;為何不<em>?|所以你不</em>?&quot;},</p>
+<p>接著程式會用比對到問句的那個項目，也就是「不」字，去比對「我不開心」，於是比對結果為「我(不)開心」， 然後將句尾的「開心」取出，並設定 tail = &quot;開心&quot;。</p>
+<p>接著程式會從 A 欄位的「為何不<em>?」、「所以你不</em>?」這兩個可能的回答中，隨機選出一個進行回答， 如果選到的是「為何不*?」，那就會將其中的 * 取代成「開心」兩個字，因此作出「為何不開心?」這樣的回答。</p>
+<p>但是，有時使用者輸入的句子當中有「你」或「我」的對話角色用語，在回答時就必須將兩者倒過來，例如： 假如使用者輸入</p>
+<blockquote>
+<p>我不喜歡你</p>
+</blockquote>
+<p>這時候比對結果是「我(不)喜歡你」，如果直接取出句尾替換，應該回答</p>
+<blockquote>
+<p>為何不喜歡你?</p>
+</blockquote>
+<p>但是這樣的答案顯然很不恰當，因此若將「你」與「我」的角色對換，就會變成：</p>
+<blockquote>
+<p>為何不喜歡我？</p>
+</blockquote>
+<p>這樣的答案在角色上就比較對，所以程式中的下列段落，就是在處理這種情況。</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript">tail = <span class="ot">tail</span>.<span class="fu">replace</span>(<span class="st">&quot;我&quot;</span>, <span class="st">&quot;#&quot;</span>).<span class="fu">replace</span>(<span class="st">&quot;你&quot;</span>, <span class="st">&quot;我&quot;</span>).<span class="fu">replace</span>(<span class="st">&quot;#&quot;</span>, <span class="st">&quot;你&quot;</span>);</code></pre>
+<p>以下是整個「中文版 Eliza」，也就是 talkto.htm 這個程式的完整原始碼，請讀者參考：</p>
+<pre class="sourceCode html"><code class="sourceCode html"><span class="kw">&lt;html&gt;</span>
+<span class="kw">&lt;head&gt;</span>
+  <span class="kw">&lt;meta</span><span class="ot"> http-equiv=</span><span class="st">&quot;content-type&quot;</span><span class="ot"> content=</span><span class="st">&quot;text/html; charset=UTF-8&quot;</span><span class="kw">/&gt;</span>
+<span class="kw">&lt;/head&gt;</span>
+<span class="kw">&lt;body</span><span class="ot"> onload=</span><span class="st">&quot;onRuleLoaded()&quot;</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;div&gt;</span>
+   請輸入問題：
+   <span class="kw">&lt;input</span><span class="ot"> id=</span><span class="st">&quot;say&quot;</span><span class="ot"> name=</span><span class="st">&quot;say&quot;</span><span class="ot"> type=</span><span class="st">&quot;text&quot;</span><span class="ot"> value=</span><span class="st">&quot;&quot;</span><span class="ot"> size=</span><span class="st">&quot;80&quot;</span><span class="ot"> onkeydown=</span><span class="st">&quot;keyin(event)&quot;</span><span class="kw">/&gt;</span> <span class="co">&lt;!-- 按 enter 時呼叫 keyin() 回答 --&gt;</span> 
+   <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> value=</span><span class="st">&quot;送出&quot;</span><span class="ot"> onclick=</span><span class="st">&quot;say()&quot;</span><span class="kw">/&gt;</span> <span class="co">&lt;!-- 當送出按鈕按下，就呼叫 say() 函數回答 --&gt;</span> 
+  <span class="kw">&lt;/div&gt;</span>
+  <span class="kw">&lt;BR/&gt;</span>
+  <span class="kw">&lt;div</span><span class="ot"> id=</span><span class="st">&quot;dialogBox&quot;</span><span class="ot"> style=</span><span class="st">&quot;width:95%; height:80%; overflow:auto; border:ridge 1px #888888; &quot;</span><span class="kw">&gt;</span>
+&gt;&gt; 您好，我的朋友! 有心事嗎 ?<span class="kw">&lt;BR/&gt;</span>  
+  <span class="kw">&lt;/div&gt;</span>
+  <span class="kw">&lt;script</span><span class="ot"> type=</span><span class="st">&quot;text/javascript&quot;</span><span class="kw">&gt;</span>  
+<span class="co">/* 以下為本程式回答問題時使用的 Q&amp;A 規則，例如對於以下 Q&amp;A 規則物件</span>
+
+<span class="co"> { Q:&quot;想 | 希望&quot;, A:&quot;為何想*呢?|真的想*?|那就去做阿?為何不呢?&quot;},</span>
+
+<span class="co">代表的是，當您輸入的字串中有「想」或「希望」這樣的詞彙時，</span>
+<span class="co">程式就會從 A: 欄位中的回答裏隨機選出一個來回答。</span>
+
+<span class="co">回答語句中的 * 代表比對詞彙之後的字串，舉例而言、假如您說：</span>
+
+<span class="co">    我想去巴黎</span>
+
+<span class="co">那麼我們的程式從這四個可能的規則中隨機挑出一個來產生答案，產生的答案可能是：</span>
+
+<span class="co">為何想去巴黎呢?</span>
+<span class="co">真的想去巴黎?</span>
+<span class="co">那就去做阿?</span>
+<span class="co">為何不呢?</span>
+
+<span class="co">Eliza 就是一個這麼簡單的程式而已。*/</span>
+<span class="co">// Q&amp;A 陣列宣告</span>
+<span class="kw">var</span> qaList = [
+{ <span class="dt">Q</span>:<span class="st">&quot;謝謝&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;不客氣!&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;對不起 | 抱歉 | 不好意思&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;別說抱歉 !|別客氣，儘管說 !&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;可否 | 可不可以&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你確定想*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;我想&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你為何想*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;我要&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你為何要*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;你是&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你認為我是*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;認為 | 以為&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何說*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;感覺&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;常有這種感覺嗎?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;為何不&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你希望我*!&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;是否&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何想知道是否*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;不能&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何不能*?|你試過了嗎?|或許你現在能*了呢?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;我是&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你好，久仰久仰!&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;甚麼 | 什麼 | 何時 | 誰 | 哪裡 | 如何 | 為何 | 因何&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何這樣問?|為何你對這問題有興趣?|你認為答案是甚麼呢?|你認為如何呢?|你常問這類問題嗎?|這真的是你想知道的嗎?|為何不問問別人?|你曾有過類似的問題嗎?|你問這問題的原因是甚麼呢?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;原因&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;這是真正的原因嗎?|還有其他原因嗎?&quot;</span>}, 
+{ <span class="dt">Q</span>:<span class="st">&quot;理由&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;這說明了甚麼呢?|還有其他理由嗎?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;你好 | 嗨 | 您好&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你好，有甚麼問題嗎?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;或許&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你好像不太確定?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;不曉得 | 不知道&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何不知道?|在想想看，有沒有甚麼可能性?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;不想 | 不希望&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;有沒有甚麼辦法呢?|為何不想*呢?|那你希望怎樣呢?&quot;</span>}, 
+{ <span class="dt">Q</span>:<span class="st">&quot;想 | 希望&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何想*呢?|真的想*?|那就去做阿?為何不呢?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;不&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;為何不*?|所以你不*?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;請&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;我該如何*呢?|你想要我*嗎?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;你&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你真的是在說我嗎?|別說我了，談談你吧!|為何這麼關心我*?|不要再說我了，談談你吧!|你自己*&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;總是 | 常常&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;能不能具體說明呢?|何時?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;像&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;有多像?|哪裡像?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;對&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你確定嗎?|我了解!&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;朋友&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;多告訴我一些有關他的事吧!|你認識他多久了呢?&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;電腦&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;你說的電腦是指我嗎?&quot;</span>}, 
+{ <span class="dt">Q</span>:<span class="st">&quot;難過&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;別想它了|別難過|別想那麼多了|事情總是會解決的&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;高興&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;不錯ㄚ|太棒了|這樣很好ㄚ&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;是阿|是的&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;甚麼事呢?|我可以幫助你嗎?|我希望我能幫得上忙!&quot;</span>},
+{ <span class="dt">Q</span>:<span class="st">&quot;&quot;</span>, <span class="dt">A</span>:<span class="st">&quot;我了解|我能理解|還有問題嗎 ?|請繼續說下去|可以說的更詳細一點嗎?|這樣喔! 我知道!|然後呢? 發生甚麼事?|再來呢? 可以多說一些嗎|接下來呢? |可以多告訴我一些嗎?|多談談有關你的事，好嗎?|想多聊一聊嗎|可否多告訴我一些呢?&quot;</span>}
+];  
+  
+<span class="er">    function random(n) { // 從 0 到 n-1 中選一個亂數</span>
+<span class="er">      return Math.floor(Math.random()*n);</span>
+    }
+    
+<span class="er">    function say() { // 當送出鍵按下時，會呼叫這個函數進行回答動作</span>
+<span class="er">      append(document.getElementById(&quot;say&quot;).value); // 先將使用者輸入的問句放到「對話區」顯示。</span>
+<span class="er">      answer(); // 然後回答使用者的問題。</span>
+    }
+    
+<span class="er">    function keyin(event) { // 當按下 enter 鍵時，會呼叫此函數進行回答</span>
+      <span class="kw">var</span> keyCode = <span class="ot">event</span>.<span class="fu">which</span>; <span class="co">// 取出按下的鍵</span>
+<span class="er">      if (keyCode == 13) say(); // 如果是換行字元 \n ，就進行回答動作。</span>
+    }
+    
+<span class="er">    function append(line) { // 將 line 放到「對話區」顯示。</span>
+<span class="er">      var dialogBox = document.getElementById(&quot;dialogBox&quot;); // 取出對話框 </span>
+      <span class="ot">dialogBox</span>.<span class="fu">innerHTML</span> += line+<span class="st">&quot;&lt;BR/&gt;</span><span class="ch">\n</span><span class="st">&quot;</span>; <span class="co">// 加入 line 這行文字，並加入換行 &lt;BR/&gt;\n</span>
+      <span class="ot">dialogBox</span>.<span class="fu">scrollTop</span> = <span class="ot">dialogBox</span>.<span class="fu">scrollHeight</span>; <span class="co">// 捲動到最下方。</span>
+    }
+
+<span class="er">    function answer() { // 回答問題</span>
+<span class="er">      setTimeout(function () { // 停頓 1 到 3 秒再回答問題 (因為若回答太快就不像人了，人打字需要時間)</span>
+<span class="er">        append(&quot;&gt;&gt; &quot;+getAnswer());</span>
+<span class="er">      }, 1000+random(2000));</span>
+    }
+    
+<span class="er">    function getAnswer() {</span>
+<span class="er">      var say = document.getElementById(&quot;say&quot;).value; // 取得使用者輸入的問句。</span>
+      <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> qaList) { <span class="co">// 對於每一個 QA </span>
+       <span class="kw">try</span> {
+        <span class="kw">var</span> qa = qaList[i];
+        <span class="kw">var</span> qList = <span class="ot">qa</span>.<span class="ot">Q</span>.<span class="fu">split</span>(<span class="st">&quot;|&quot;</span>); <span class="co">// 取出 Q 部分，分割成一個一個的問題字串 q</span>
+        <span class="kw">var</span> aList = <span class="ot">qa</span>.<span class="ot">A</span>.<span class="fu">split</span>(<span class="st">&quot;|&quot;</span>); <span class="co">// 取出回答 A 部分，分割成一個一個的回答字串 q</span>
+        <span class="kw">for</span> (<span class="kw">var</span> qi <span class="kw">in</span> qList) { <span class="co">// 對於每個問題字串 q</span>
+          <span class="kw">var</span> q = qList[qi];
+          <span class="kw">if</span> (q==<span class="st">&quot;&quot;</span>) <span class="co">// 如果是最後一個「空字串」的話，那就不用比對，直接任選一個回答。</span>
+            <span class="kw">return</span> aList[<span class="fu">random</span>(<span class="ot">aList</span>.<span class="fu">length</span>)]; <span class="co">// 那就從答案中任選一個回答</span>
+          <span class="kw">var</span> r = <span class="kw">new</span> <span class="fu">RegExp</span>(<span class="st">&quot;(.*)&quot;</span>+q+<span class="st">&quot;([^?.;]*)&quot;</span>, <span class="st">&quot;gi&quot;</span>); <span class="co">// 建立正規表達式 (.*) q ([^?.;]*)</span>
+          <span class="kw">if</span> (<span class="ot">say</span>.<span class="fu">match</span>(r)) { <span class="co">// 比對成功的話</span>
+            tail = <span class="ot">RegExp</span>.<span class="fu">$2</span>; <span class="co">// 就取出句尾</span>
+            <span class="co">// 將問句句尾的「我」改成「你」，「你」改成「我」。</span>
+            tail = <span class="ot">tail</span>.<span class="fu">replace</span>(<span class="st">&quot;我&quot;</span>, <span class="st">&quot;#&quot;</span>).<span class="fu">replace</span>(<span class="st">&quot;你&quot;</span>, <span class="st">&quot;我&quot;</span>).<span class="fu">replace</span>(<span class="st">&quot;#&quot;</span>, <span class="st">&quot;你&quot;</span>);
+            <span class="kw">return</span> aList[<span class="fu">random</span>(<span class="ot">aList</span>.<span class="fu">length</span>)].<span class="fu">replace</span>(<span class="ot">/</span><span class="fl">\*</span><span class="ot">/</span>, tail); <span class="co">// 然後將 * 改為句尾進行回答</span>
+          }
+        }
+       } <span class="kw">catch</span> (err) {}
+      }
+      <span class="kw">return</span> <span class="st">&quot;然後呢？&quot;</span>; <span class="co">// 如果發生任何錯誤，就回答「然後呢？」來混過去。</span>
+    }   
+  <span class="kw">&lt;/script&gt;</span>
+<span class="kw">&lt;/body&gt;</span>
+<span class="kw">&lt;/html&gt;</span></code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>雖然 Eliza 的運作原理非常簡單，但是卻成功的欺騙了不少人，讓人們可以與程式聊天，這是人工智慧史上一個重要的進展， 雖然這個程式並不是真的很有「智慧」，或者說根本就是在「欺騙」人，但是卻能達成與人聊天這麼困難的任務，實在是一個 非常令人驚訝的小程式。</p>
+<p>如果讀者曾經用過 Apple iPhone 上的 Siri，那麼應該可以體會到這種程式的用途。當然、Siri 比 Eliza 還要聰明一些， 但事實上也沒有聰明太多，只要我們加入一些特殊的規則，Eliza 也可以輕易的被擴充成類似 Siri 的功能，例如看到 「上市公司名稱」加上「價錢描述」，我們就猜測使用者是想查該公司的股票價格，於是就顯示「該公司的股價走勢」。</p>
+<p>這種方法其實在某種程度上抓到了使用者的意圖，因此在自然語言處理領域，透過規則比對其實是最容易撰寫與使用的一種方法， 很多所謂的智慧型交談系統，其實都是這樣做出來的喔！</p>
+<h3 id="參考"><a href="#參考">參考</a></h3>
+<ul>
+<li>Wikipedia:<a href="http://en.wikipedia.org/wiki/Turing_test">Turing Test</a> -- <a href="http://en.wikipedia.org/wiki/Turing_test">http://en.wikipedia.org/wiki/Turing_test</a></li>
+<li>維基百科：<a href="http://zh.wikipedia.org/wiki/%E5%9B%BE%E7%81%B5%E6%B5%8B%E8%AF%95">圖靈測試</a> -- <a href="http://zh.wikipedia.org/wiki/%E5%9B%BE%E7%81%B5%E6%B5%8B%E8%AF%95">http://zh.wikipedia.org/wiki/%E5%9B%BE%E7%81%B5%E6%B5%8B%E8%AF%95</a></li>
+<li>Wikipedia:<a href="http://en.wikipedia.org/wiki/ELIZA">Eliza</a> -- <a href="http://en.wikipedia.org/wiki/ELIZA">http://en.wikipedia.org/wiki/ELIZA</a></li>
+<li>陳鍾誠的網站:自然語言處理：Eliza -- <a href="http://ccckmit.wikidot.com/nlp:eliza">http://ccckmit.wikidot.com/nlp:eliza</a></li>
+<li>自己動手設計交談機器人 (Eliza 中文版) - 使用 Java -- <a href="http://ccckmit.wikidot.com/code:eliza">http://ccckmit.wikidot.com/code:eliza</a></li>
+</ul>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

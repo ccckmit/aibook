@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#布林邏輯的推論引擎----以-javascript-實作">布林邏輯的推論引擎 -- 以 JavaScript 實作</a><ul>
+<li><a href="#簡介">簡介</a></li>
+<li><a href="#推理引擎">推理引擎</a></li>
+<li><a href="#簡易的測試程式">簡易的測試程式</a></li>
+<li><a href="#執行結果">執行結果</a></li>
+<li><a href="#結語">結語</a></li>
+</ul></li>
+</ul>
+</div>
+<h1 id="布林邏輯的推論引擎----以-javascript-實作"><a href="#布林邏輯的推論引擎----以-javascript-實作">布林邏輯的推論引擎 -- 以 JavaScript 實作</a></h1>
+<h2 id="簡介"><a href="#簡介">簡介</a></h2>
+<h2 id="推理引擎"><a href="#推理引擎">推理引擎</a></h2>
+<pre class="sourceCode javascript"><code class="sourceCode javascript">檔案：<span class="ot">kb</span>.<span class="fu">js</span> (Knowledge Base 的簡寫)
+
+<span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+
+<span class="kw">var</span> kb = <span class="kw">function</span>() {
+  <span class="kw">this</span>.<span class="fu">rules</span> = [];
+  <span class="kw">this</span>.<span class="fu">facts</span> = {};
+  <span class="kw">this</span>.<span class="fu">dict</span>  = {};
+}
+
+<span class="kw">var</span> kbp = <span class="ot">kb</span>.<span class="fu">prototype</span>;
+
+<span class="ot">kbp</span>.<span class="fu">load</span> = <span class="kw">function</span>(code) {
+  <span class="kw">var</span> lines = <span class="ot">code</span>.<span class="fu">split</span>(<span class="ot">/</span><span class="bn">[</span><span class="fl">\.</span><span class="bn">]</span><span class="fl">+</span><span class="ot"> </span><span class="fl">?</span><span class="ot">/</span>);
+  <span class="fu">log</span>(<span class="st">&quot;%j&quot;</span>, lines);
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> lines) {
+    <span class="kw">if</span> (lines[i].<span class="fu">trim</span>().<span class="fu">length</span> &gt; <span class="dv">0</span>)
+      <span class="kw">this</span>.<span class="fu">addRule</span>(lines[i]);
+  }
+}
+  
+<span class="ot">kbp</span>.<span class="fu">isFact</span>=<span class="kw">function</span>(term) {
+  <span class="kw">if</span> (<span class="ot">term</span>.<span class="fu">length</span> == <span class="dv">0</span>)
+    <span class="kw">return</span> <span class="kw">true</span>;
+  <span class="kw">return</span> <span class="kw">this</span>.<span class="fu">facts</span>[term];
+}
+
+<span class="ot">kbp</span>.<span class="fu">check</span> = <span class="kw">function</span>(rule) {
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> <span class="ot">rule</span>.<span class="fu">terms</span>) {
+    <span class="kw">var</span> term = <span class="ot">rule</span>.<span class="fu">terms</span>[i].<span class="fu">trim</span>();
+    <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">isFact</span>(term))
+      <span class="kw">continue</span>;
+    <span class="kw">else</span>
+      <span class="kw">return</span> <span class="kw">false</span>;
+  }
+  <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="ot">kbp</span>.<span class="fu">addFact</span> = <span class="kw">function</span>(term) {
+  <span class="kw">this</span>.<span class="fu">facts</span>[term] = <span class="kw">true</span>;
+  <span class="fu">log</span>(<span class="st">&quot;addFact(%s)&quot;</span>, term);
+}
+
+<span class="ot">kbp</span>.<span class="fu">addRule</span> = <span class="kw">function</span>(line) {
+  <span class="kw">var</span> m = <span class="ot">line</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="fl">^(</span><span class="bn">[</span><span class="fl">^</span><span class="bn">&lt;=]</span><span class="fl">*)(</span><span class="ot">&lt;=</span><span class="fl">(</span><span class="ot">.</span><span class="fl">*))?$</span><span class="ot">/</span>);
+  <span class="kw">var</span> head = (m[<span class="dv">1</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">1</span>].<span class="fu">trim</span>();
+  <span class="kw">var</span> terms= (m[<span class="dv">3</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">3</span>].<span class="fu">trim</span>().<span class="fu">split</span>(<span class="ot">/&amp;</span><span class="fl">+</span><span class="ot">/</span>);
+  <span class="fu">log</span>(<span class="st">&quot;rule:head=%s terms=%j&quot;</span>, head, terms);
+  <span class="kw">var</span> rule = { <span class="dt">head</span>:head, <span class="dt">terms</span>:terms, <span class="dt">satisfy</span>:<span class="kw">false</span> };
+  <span class="kw">this</span>.<span class="ot">rules</span>.<span class="fu">push</span>(rule);
+  <span class="kw">this</span>.<span class="fu">dict</span>[head] = { <span class="dt">headHits</span>: [rule], <span class="dt">bodyHits</span>:[] };  
+}
+
+<span class="ot">kbp</span>.<span class="fu">forwardChaining</span> = <span class="kw">function</span>() {
+  <span class="kw">do</span> {
+    <span class="kw">var</span> anySatisfy = <span class="kw">false</span>;
+    <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> <span class="kw">this</span>.<span class="fu">rules</span>) {
+      <span class="kw">var</span> rule = <span class="kw">this</span>.<span class="fu">rules</span>[i];
+      <span class="kw">if</span> (!<span class="ot">rule</span>.<span class="fu">satisfy</span>) {
+        <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">check</span>(rule)) {
+          <span class="kw">this</span>.<span class="fu">addFact</span>(<span class="ot">rule</span>.<span class="fu">head</span>);
+          <span class="ot">rule</span>.<span class="fu">satisfy</span> = <span class="kw">true</span>;
+          anySatisfy = <span class="kw">true</span>;
+        }
+      }
+    }
+  } <span class="kw">while</span> (anySatisfy);
+  <span class="fu">log</span>(<span class="st">&quot;facts=%j&quot;</span>, <span class="ot">Object</span>.<span class="fu">keys</span>(<span class="kw">this</span>.<span class="fu">facts</span>));
+}
+
+<span class="ot">kbp</span>.<span class="fu">trySatisfy</span> = <span class="kw">function</span>(goal) {
+  <span class="fu">log</span>(<span class="st">&quot;trySatisfy(%s)&quot;</span>, goal);
+  <span class="kw">var</span> word = <span class="kw">this</span>.<span class="fu">dict</span>[goal];
+  <span class="kw">if</span> (word == <span class="kw">null</span>) <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">var</span> headHits = <span class="ot">word</span>.<span class="fu">headHits</span>;
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> headHits) {
+    <span class="kw">var</span> rule = headHits[i];
+    <span class="kw">if</span> (<span class="ot">rule</span>.<span class="fu">satisfy</span>) {
+      <span class="kw">this</span>.<span class="fu">addFact</span>(goal);
+      <span class="kw">return</span> <span class="kw">true</span>;
+    } <span class="kw">else</span> {
+      <span class="kw">var</span> isSatisfy = <span class="kw">true</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> ti <span class="kw">in</span> <span class="ot">rule</span>.<span class="fu">terms</span>) {
+        <span class="kw">var</span> term = <span class="ot">rule</span>.<span class="fu">terms</span>[ti];
+        <span class="kw">var</span> satisfy = <span class="kw">this</span>.<span class="fu">trySatisfy</span>(term);
+        <span class="kw">if</span> (!satisfy) isSatisfy = <span class="kw">false</span>;
+      }
+      <span class="ot">rule</span>.<span class="fu">satisfy</span> = isSatisfy;
+      <span class="kw">if</span> (isSatisfy) {
+        <span class="kw">this</span>.<span class="fu">addFact</span>(goal);
+        <span class="kw">return</span> <span class="kw">true</span>;
+      }
+    }
+  }
+  <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="ot">kbp</span>.<span class="fu">backwardChaining</span> = <span class="kw">function</span>(goal) {
+  <span class="kw">this</span>.<span class="fu">trySatisfy</span>(goal);
+  <span class="fu">log</span>(<span class="st">&quot;facts=%j&quot;</span>, <span class="ot">Object</span>.<span class="fu">keys</span>(<span class="kw">this</span>.<span class="fu">facts</span>));
+}
+
+<span class="ot">module</span>.<span class="fu">exports</span> = kb;</code></pre>
+<h2 id="簡易的測試程式"><a href="#簡易的測試程式">簡易的測試程式</a></h2>
+<p>檔案：kbTest.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> fs = <span class="fu">require</span>(<span class="st">&#39;fs&#39;</span>); <span class="co">// 引用檔案物件</span>
+<span class="kw">var</span> kb = <span class="fu">require</span>(<span class="st">&#39;./kb&#39;</span>);
+
+<span class="kw">var</span> code = <span class="st">&quot;A&lt;=B. B&lt;=C&amp;D. C&lt;=E. D&lt;=F. E. F. Z&lt;=C&amp;D&amp;G.&quot;</span>;
+<span class="kw">var</span> kb1 = <span class="kw">new</span> <span class="fu">kb</span>();
+<span class="ot">kb1</span>.<span class="fu">load</span>(code);
+<span class="ot">kb1</span>.<span class="fu">forwardChaining</span>();
+<span class="co">// kb1.backwardChaining(&quot;A&quot;);</span>
+<span class="co">// kb1.backwardChaining(&quot;Z&quot;);</span></code></pre>
+<h2 id="執行結果"><a href="#執行結果">執行結果</a></h2>
+<pre><code>C:\Dropbox\Public\web\ai\code\KB&gt;node kbTest
+[&quot;A&lt;=B&quot;,&quot;B&lt;=C&amp;D&quot;,&quot;C&lt;=E&quot;,&quot;D&lt;=F&quot;,&quot;E&quot;,&quot;F&quot;,&quot;Z&lt;=C&amp;D&amp;G&quot;,&quot;&quot;]
+rule:head=A terms=[&quot;B&quot;]
+rule:head=B terms=[&quot;C&quot;,&quot;D&quot;]
+rule:head=C terms=[&quot;E&quot;]
+rule:head=D terms=[&quot;F&quot;]
+rule:head=E terms=&quot;&quot;
+rule:head=F terms=&quot;&quot;
+rule:head=Z terms=[&quot;C&quot;,&quot;D&quot;,&quot;G&quot;]
+addFact(E)
+addFact(F)
+addFact(C)
+addFact(D)
+addFact(B)
+addFact(A)
+facts=[&quot;E&quot;,&quot;F&quot;,&quot;C&quot;,&quot;D&quot;,&quot;B&quot;,&quot;A&quot;]</code></pre>
+<h2 id="結語"><a href="#結語">結語</a></h2>
+<p>以上我們用 JavaScript 實作了一個簡易的布林邏輯推論引擎，採用洪氏邏輯的語法，以及前向推論 (forwardChaining) 的方式。(程式中也有附上後向推論的函數 backwardChaining，讀者可自行測試)。</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作謂詞邏輯的推論引擎">實作：謂詞邏輯的推論引擎</a></li>
+</ul>
+</div>
+<h2 id="實作謂詞邏輯的推論引擎"><a href="#實作謂詞邏輯的推論引擎">實作：謂詞邏輯的推論引擎</a></h2>
+<p>接著、讓我們將上述的「布林推論引擎」擴充，成為一個可以包含「布林函數」的「謂詞邏輯」推論引擎。</p>
+<h3 id="程式碼謂詞推理引擎"><a href="#程式碼謂詞推理引擎">程式碼：謂詞推理引擎</a></h3>
+<p>檔案：pkb.js (Predicate Knowledge Base 的簡寫)</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> ml = <span class="fu">require</span>(<span class="st">&quot;./myLib&quot;</span>);
+
+<span class="kw">var</span> Predicate = <span class="kw">function</span>() {}
+
+<span class="ot">Predicate</span>.<span class="ot">prototype</span>.<span class="fu">load</span> = <span class="kw">function</span>(str) {
+  <span class="kw">var</span> m = <span class="ot">str</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="fl">^(</span><span class="bn">[</span><span class="fl">^\(</span><span class="bn">]</span><span class="fl">*)\((</span><span class="bn">[</span><span class="fl">^\)</span><span class="bn">]</span><span class="fl">*)\)$</span><span class="ot">/</span>);
+  <span class="kw">this</span>.<span class="fu">name</span>   = (m[<span class="dv">1</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">1</span>].<span class="fu">trim</span>();
+  <span class="kw">this</span>.<span class="fu">params</span> = (m[<span class="dv">2</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">2</span>].<span class="fu">trim</span>().<span class="fu">split</span>(<span class="ot">/</span><span class="bn">[,]</span><span class="ot">/</span>);
+  <span class="kw">return</span> <span class="kw">this</span>;
+}
+
+<span class="ot">Predicate</span>.<span class="ot">prototype</span>.<span class="fu">toString</span> = <span class="kw">function</span>() {
+  <span class="kw">return</span> <span class="ot">ml</span>.<span class="fu">format</span>(<span class="st">&quot;%s%j&quot;</span>, <span class="kw">this</span>.<span class="fu">name</span>, <span class="kw">this</span>.<span class="fu">params</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="fl">\&quot;</span><span class="ot">/gi</span>, <span class="st">&quot;&quot;</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="fl">\[</span><span class="ot">/gi</span>, <span class="st">&quot;(&quot;</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="fl">\]</span><span class="ot">/gi</span>, <span class="st">&quot;)&quot;</span>);
+}
+
+<span class="ot">Predicate</span>.<span class="ot">prototype</span>.<span class="fu">unify</span> = <span class="kw">function</span>(fact) {
+  <span class="kw">var</span> map = {};
+  <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">name</span> != <span class="ot">fact</span>.<span class="fu">name</span> || <span class="kw">this</span>.<span class="ot">params</span>.<span class="fu">length</span> != <span class="ot">fact</span>.<span class="ot">params</span>.<span class="fu">length</span>) 
+    <span class="kw">return</span> <span class="kw">null</span>;
+  <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="kw">this</span>.<span class="ot">params</span>.<span class="fu">length</span>; i++) {
+    <span class="kw">var</span> p  = <span class="kw">this</span>.<span class="fu">params</span>[i];
+    <span class="kw">var</span> fp = <span class="ot">fact</span>.<span class="fu">params</span>[i];
+    <span class="kw">if</span> (map[p] == <span class="kw">null</span>) { <span class="co">// 參數 p 沒有 bind，所以就 bind 上去</span>
+      <span class="kw">if</span> (<span class="ot">p</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="fl">^</span><span class="bn">[a-z]</span><span class="fl">+</span><span class="ot"> !</span><span class="bn">[]</span><span class="fl">(</span><span class="ot">../timg/b66e6870f9c0.jpg</span><span class="fl">)</span><span class="ot"> /</span>)!=<span class="kw">null</span>)
+        map[p] = fp;
+    } <span class="kw">else</span> { <span class="co">// 參數 p 已 bind，檢查是否有衝突。</span>
+      <span class="kw">if</span> (map[p] == fp)
+        map[p] = fp; <span class="co">// 沒衝突，加入。</span>
+      <span class="kw">else</span>
+        <span class="kw">return</span> <span class="kw">null</span>; <span class="co">// 有衝突，傳回 null;</span>
+    }
+  }
+  <span class="kw">return</span> map;
+}
+
+<span class="co">// 若每個變數都填入了，那麼就是滿足了 (satisfy)</span>
+<span class="ot">Predicate</span>.<span class="ot">prototype</span>.<span class="fu">satisfy</span> = <span class="kw">function</span>(map) {
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> <span class="kw">this</span>.<span class="fu">params</span>) {
+    <span class="kw">var</span> p = <span class="kw">this</span>.<span class="fu">params</span>[i];
+    <span class="kw">if</span> (map[p] == <span class="kw">null</span>)
+      <span class="kw">return</span> <span class="kw">false</span>;
+  }
+  <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="ot">Predicate</span>.<span class="ot">prototype</span>.<span class="fu">mapping</span> = <span class="kw">function</span>(map) {
+  <span class="kw">var</span> term = <span class="kw">new</span> <span class="fu">Predicate</span>();
+  <span class="ot">term</span>.<span class="fu">name</span> = <span class="kw">this</span>.<span class="fu">name</span>;
+  <span class="ot">term</span>.<span class="fu">params</span> = [];
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> <span class="kw">this</span>.<span class="fu">params</span>) {
+    <span class="kw">var</span> p = <span class="kw">this</span>.<span class="fu">params</span>[i];
+    <span class="ot">term</span>.<span class="ot">params</span>.<span class="fu">push</span>(map[p]);
+  }
+  <span class="kw">return</span> term;
+}
+
+<span class="kw">var</span> Rule = <span class="kw">function</span>() {}
+
+<span class="ot">Rule</span>.<span class="ot">prototype</span>.<span class="fu">clone</span> = <span class="kw">function</span>() {
+  <span class="kw">var</span> r=<span class="kw">new</span> <span class="fu">Rule</span>();
+  <span class="ot">r</span>.<span class="fu">head</span> = <span class="kw">this</span>.<span class="fu">head</span>;
+  <span class="ot">r</span>.<span class="fu">terms</span> = <span class="kw">this</span>.<span class="fu">terms</span>;
+  <span class="ot">r</span>.<span class="fu">map</span> = <span class="kw">this</span>.<span class="fu">map</span>;
+  <span class="kw">return</span> r;
+}
+
+<span class="ot">Rule</span>.<span class="ot">prototype</span>.<span class="fu">load</span> = <span class="kw">function</span>(line) {
+  <span class="kw">var</span> m = <span class="ot">line</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="fl">^(</span><span class="bn">[</span><span class="fl">^</span><span class="bn">&lt;=]</span><span class="fl">*)(</span><span class="ot">&lt;=</span><span class="fl">(</span><span class="bn">[</span><span class="fl">^\{</span><span class="bn"> ![]</span><span class="fl">(</span><span class="ot">../timg/0568953a55be.jpg</span><span class="fl">)</span><span class="ot"> /</span>);
+  <span class="kw">var</span> head = (m[<span class="dv">1</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">1</span>].<span class="fu">trim</span>();
+  <span class="kw">var</span> terms= (m[<span class="dv">3</span>]==<span class="kw">null</span>)?<span class="st">&quot;&quot;</span>:m[<span class="dv">3</span>].<span class="fu">trim</span>().<span class="fu">split</span>(<span class="ot">/</span><span class="bn">[&amp;]</span><span class="fl">+</span><span class="ot">/</span>);
+  <span class="kw">this</span>.<span class="fu">head</span> = <span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(head);
+  <span class="kw">this</span>.<span class="fu">terms</span> = [];
+  <span class="kw">for</span> (i=<span class="dv">0</span>; i&lt;<span class="ot">terms</span>.<span class="fu">length</span>; i++) {
+    <span class="kw">this</span>.<span class="ot">terms</span>.<span class="fu">push</span>(<span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(terms[i]));
+  }
+  <span class="kw">this</span>.<span class="fu">map</span> = {};
+  <span class="kw">return</span> <span class="kw">this</span>;
+}
+
+<span class="ot">Rule</span>.<span class="ot">prototype</span>.<span class="fu">toString</span> = <span class="kw">function</span>() {
+  <span class="kw">return</span> <span class="ot">ml</span>.<span class="fu">format</span>(<span class="st">&quot;%s&lt;=%s%j&quot;</span>, <span class="kw">this</span>.<span class="fu">head</span>, <span class="kw">this</span>.<span class="ot">terms</span>.<span class="fu">join</span>(<span class="st">&quot;&amp;&quot;</span>), <span class="kw">this</span>.<span class="fu">map</span>);
+}
+
+<span class="ot">Rule</span>.<span class="ot">prototype</span>.<span class="fu">resolve</span> = <span class="kw">function</span>(fact) {
+  <span class="kw">var</span> rmap = <span class="kw">this</span>.<span class="fu">map</span>;
+<span class="co">//  ml.log(&quot;resolve:rule=%s, fact=%s&quot;, this, fact);</span>
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> <span class="kw">this</span>.<span class="fu">terms</span>) {
+    <span class="kw">var</span> term = <span class="kw">this</span>.<span class="fu">terms</span>[i];
+    <span class="kw">var</span> tmap = <span class="ot">term</span>.<span class="fu">unify</span>(fact);
+    <span class="kw">if</span> (tmap == <span class="kw">null</span>) <span class="kw">continue</span>;
+<span class="co">//    ml.log(&quot;unify:%s;%s=%j&quot;, term, fact, tmap);</span>
+    <span class="kw">var</span> isConflict = <span class="kw">false</span>;
+    <span class="kw">for</span> (<span class="kw">var</span> mi <span class="kw">in</span> tmap) {
+      <span class="kw">if</span> (rmap[mi]!=<span class="kw">null</span> &amp;&amp; rmap[mi] != tmap[mi])
+        isConflict = <span class="kw">true</span>;
+    }
+    <span class="kw">if</span> (!isConflict) {
+<span class="co">//      ml.log(&quot; return map=%j&quot;, tmap);</span>
+      <span class="kw">return</span> tmap;
+    }
+  }
+  <span class="kw">return</span> <span class="kw">null</span>;
+}
+
+<span class="kw">var</span> KB = <span class="kw">function</span>() {
+  <span class="kw">this</span>.<span class="fu">rules</span> = [];
+  <span class="kw">this</span>.<span class="fu">facts</span> = [];
+  <span class="kw">this</span>.<span class="fu">ruleMap</span> = {};
+  <span class="kw">this</span>.<span class="fu">factMap</span> = {};
+  <span class="kw">this</span>.<span class="fu">resolveMap</span> = {};
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">load</span> = <span class="kw">function</span>(code) {
+  code = <span class="ot">code</span>.<span class="fu">replace</span>(<span class="ot">/</span><span class="bn">\s</span><span class="ot">/gi</span>, <span class="st">&quot;&quot;</span>);
+  <span class="kw">var</span> lines = <span class="ot">code</span>.<span class="fu">split</span>(<span class="ot">/</span><span class="bn">[</span><span class="fl">\.</span><span class="bn">]</span><span class="fl">+</span><span class="ot"> </span><span class="fl">?</span><span class="ot">/</span>);
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;%j&quot;</span>, lines);
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> lines) {
+    <span class="kw">var</span> line = lines[i].<span class="fu">trim</span>();
+    <span class="kw">if</span> (<span class="ot">line</span>.<span class="fu">length</span> == <span class="dv">0</span>) <span class="kw">continue</span>;
+    <span class="kw">if</span> (<span class="ot">line</span>.<span class="fu">indexOf</span>(<span class="st">&quot;&lt;=&quot;</span>)&gt;=<span class="dv">0</span>) {
+      <span class="kw">this</span>.<span class="fu">addRule</span>(<span class="kw">new</span> <span class="fu">Rule</span>().<span class="fu">load</span>(line));
+    } <span class="kw">else</span>
+      <span class="kw">this</span>.<span class="fu">addFact</span>(<span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(line));
+  }
+  <span class="kw">this</span>.<span class="fu">dump</span>();
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">dump</span> = <span class="kw">function</span>() {
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;=====facts========&quot;</span>);
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="kw">this</span>.<span class="ot">facts</span>.<span class="fu">join</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>));
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;========rules=======&quot;</span>);
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="kw">this</span>.<span class="ot">rules</span>.<span class="fu">join</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>));
+<span class="co">// ml.log(&quot;========resolveMap=======\n&quot;);</span>
+<span class="co">// ml.log(Object.keys(this.resolveMap).join(&quot;|&quot;));</span>
+}
+  
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">addFact</span> = <span class="kw">function</span>(fact) {
+  <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">factMap</span>[<span class="ot">fact</span>.<span class="fu">toString</span>()] == <span class="kw">null</span>) {
+    <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;addFact:%s&quot;</span>, fact);
+    <span class="kw">this</span>.<span class="ot">facts</span>.<span class="fu">push</span>(fact);
+    <span class="kw">this</span>.<span class="fu">factMap</span>[<span class="ot">fact</span>.<span class="fu">toString</span>()] = fact;
+    <span class="kw">return</span> <span class="kw">true</span>;
+  } <span class="kw">else</span> 
+    <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">addRule</span> = <span class="kw">function</span>(rule) {
+  <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">ruleMap</span>[<span class="ot">rule</span>.<span class="fu">toString</span>()] == <span class="kw">null</span>) {
+    <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;addRule:%s&quot;</span>, <span class="ot">rule</span>.<span class="fu">toString</span>());
+    <span class="kw">this</span>.<span class="ot">rules</span>.<span class="fu">push</span>(rule);
+    <span class="kw">this</span>.<span class="fu">ruleMap</span>[<span class="ot">rule</span>.<span class="fu">toString</span>()] = rule;
+    <span class="kw">return</span> <span class="kw">true</span>;
+  } <span class="kw">else</span>
+    <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">genNew</span> = <span class="kw">function</span>(rule, fact) {
+  <span class="kw">var</span> fmap = <span class="ot">rule</span>.<span class="fu">resolve</span>(fact);
+  <span class="kw">if</span> (fmap == <span class="kw">null</span>) <span class="kw">return</span> <span class="kw">null</span>;
+  <span class="kw">var</span> rmap = <span class="ot">ml</span>.<span class="fu">merge</span>(<span class="ot">rule</span>.<span class="fu">map</span>, fmap);
+  <span class="kw">if</span> (<span class="ot">rule</span>.<span class="ot">head</span>.<span class="fu">satisfy</span>(rmap)) {
+    <span class="kw">var</span> newFact = <span class="ot">rule</span>.<span class="ot">head</span>.<span class="fu">mapping</span>(rmap);
+    <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">addFact</span>(newFact))
+      <span class="kw">return</span> newFact;
+  } <span class="kw">else</span> {
+    <span class="kw">if</span> (!<span class="ot">ml</span>.<span class="fu">isEmpty</span>(fmap)) {
+    <span class="kw">var</span> newRule = <span class="ot">rule</span>.<span class="fu">clone</span>();
+    <span class="ot">newRule</span>.<span class="fu">map</span>  = rmap
+    <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">addRule</span>(newRule))
+      <span class="kw">return</span> newRule;
+    }
+  }
+  <span class="kw">return</span> <span class="kw">null</span>;
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">forwardChaining</span> = <span class="kw">function</span>() {
+  <span class="kw">do</span> {
+    <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;======forwardChaining============&quot;</span>);
+    <span class="kw">var</span> anyNew = <span class="kw">false</span>;
+    <span class="kw">for</span> (<span class="kw">var</span> fi=<span class="dv">0</span>; fi &lt; <span class="kw">this</span>.<span class="ot">facts</span>.<span class="fu">length</span>; fi++) {
+      <span class="kw">var</span> fact=<span class="kw">this</span>.<span class="fu">facts</span>[fi];
+      <span class="kw">for</span> (<span class="kw">var</span> ri <span class="kw">in</span> <span class="kw">this</span>.<span class="fu">rules</span>) {
+        <span class="kw">var</span> rule = <span class="kw">this</span>.<span class="fu">rules</span>[ri];
+        <span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">resolveMap</span>[fi+<span class="st">&quot;,&quot;</span>+ri] == <span class="kw">null</span>) {
+          <span class="kw">var</span> newObj = <span class="kw">this</span>.<span class="fu">genNew</span>(rule, fact);
+          <span class="kw">if</span> (newObj != <span class="kw">null</span>) {
+            <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;  %s;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, rule, fact);
+            anyNew = <span class="kw">true</span>;
+          }
+        }
+        <span class="kw">else</span>
+          <span class="kw">this</span>.<span class="fu">resolveMap</span>[fi+<span class="st">&quot;,&quot;</span>+ri]=<span class="kw">true</span>;
+      }
+    }
+  } <span class="kw">while</span> (anyNew);
+  <span class="kw">this</span>.<span class="fu">dump</span>();
+}
+
+<span class="ot">KB</span>.<span class="ot">prototype</span>.<span class="fu">test</span> = <span class="kw">function</span>() {
+  <span class="kw">var</span> fxy = <span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(<span class="st">&quot;father(x,y)&quot;</span>);
+  <span class="kw">var</span> fjj = <span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(<span class="st">&quot;father(John,Johnson)&quot;</span>);
+  <span class="kw">var</span> rp = <span class="kw">new</span> <span class="fu">Rule</span>().<span class="fu">load</span>(<span class="st">&quot;parent(x,y)&lt;=father(x,y)&quot;</span>);
+  <span class="kw">var</span> ra = <span class="kw">new</span> <span class="fu">Rule</span>().<span class="fu">load</span>(<span class="st">&quot;ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z)&quot;</span>);
+  <span class="kw">var</span> pgj = <span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(<span class="st">&quot;ancestor(George,John)&quot;</span>);
+  <span class="kw">var</span> pjj = <span class="kw">new</span> <span class="fu">Predicate</span>().<span class="fu">load</span>(<span class="st">&quot;parent(John,Johnson)&quot;</span>);
+  <span class="ot">ra</span>.<span class="fu">map</span> = <span class="ot">ra</span>.<span class="fu">resolve</span>(pgj);
+  <span class="ot">ra</span>.<span class="fu">map</span> = <span class="ot">ml</span>.<span class="fu">merge</span>(<span class="ot">ra</span>.<span class="fu">map</span>, <span class="ot">ra</span>.<span class="fu">resolve</span>(pjj));
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot;ra=%s&quot;</span>, ra);
+  <span class="ot">ml</span>.<span class="fu">log</span>(<span class="st">&quot; satisfy=%d&quot;</span>, <span class="ot">ra</span>.<span class="ot">head</span>.<span class="fu">satisfy</span>(<span class="ot">ra</span>.<span class="fu">map</span>));
+}
+
+<span class="ot">module</span>.<span class="fu">exports</span> = KB;</code></pre>
+<h3 id="前向推論主程式pkbreason.js"><a href="#前向推論主程式pkbreason.js">前向推論主程式：pkbReason.js</a></h3>
+<p>檔案：pkbReason.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> fs = <span class="fu">require</span>(<span class="st">&#39;fs&#39;</span>); <span class="co">// 引用檔案物件</span>
+<span class="kw">var</span> kb = <span class="fu">require</span>(<span class="st">&#39;./pkb&#39;</span>);
+
+<span class="kw">var</span> kb1 = <span class="kw">new</span> <span class="fu">kb</span>();
+<span class="kw">var</span> code = <span class="ot">fs</span>.<span class="fu">readFileSync</span>(<span class="ot">process</span>.<span class="fu">argv</span>[<span class="dv">2</span>], <span class="st">&quot;utf8&quot;</span>).<span class="fu">replace</span>(<span class="ot">/</span><span class="bn">\n</span><span class="ot">/gi</span>, <span class="st">&quot;&quot;</span>); <span class="co">// 讀取檔案</span>
+<span class="ot">kb1</span>.<span class="fu">load</span>(code);
+<span class="ot">kb1</span>.<span class="fu">forwardChaining</span>();</code></pre>
+<h3 id="推論規則範例"><a href="#推論規則範例">推論規則範例</a></h3>
+<p>規則檔：family.pkb</p>
+<pre><code>parent(x,y)   &lt;= father(x,y).
+parent(x,y)   &lt;= mother(x,y).
+ancestor(x,y) &lt;= parent(x,y).
+ancestor(x,z) &lt;= ancestor(x,y) &amp; parent(y,z).
+
+father(John, Johnson).
+mother(Mary, Johnson).
+father(George, John).
+father(John, Jake).</code></pre>
+<h3 id="執行結果"><a href="#執行結果">執行結果</a></h3>
+<pre><code>C:\Dropbox\Public\web\ai\code\PKB&gt;node pkbReason family.pkb
+[&quot;parent(x,y)&lt;=father(x,y)&quot;,&quot;parent(x,y)&lt;=mother(x,y)&quot;,&quot;ancestor(x,y)&lt;=parent(x,
+y)&quot;,&quot;ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z)&quot;,&quot;father(John,Johnson)&quot;,&quot;mother(Ma
+ry,Johnson)&quot;,&quot;father(George,John)&quot;,&quot;father(John,Jake)&quot;,&quot;&quot;]
+addRule:parent(x,y)&lt;=father(x,y){}
+addRule:parent(x,y)&lt;=mother(x,y){}
+addRule:ancestor(x,y)&lt;=parent(x,y){}
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){}
+addFact:father(John,Johnson)
+addFact:mother(Mary,Johnson)
+addFact:father(George,John)
+addFact:father(John,Jake)
+=====facts========
+father(John,Johnson)
+mother(Mary,Johnson)
+father(George,John)
+father(John,Jake)
+========rules=======
+parent(x,y)&lt;=father(x,y){}
+parent(x,y)&lt;=mother(x,y){}
+ancestor(x,y)&lt;=parent(x,y){}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){}
+======forwardChaining============
+addFact:parent(John,Johnson)
+  parent(x,y)&lt;=father(x,y){};father(John,Johnson)
+
+addFact:parent(Mary,Johnson)
+  parent(x,y)&lt;=mother(x,y){};mother(Mary,Johnson)
+
+addFact:parent(George,John)
+  parent(x,y)&lt;=father(x,y){};father(George,John)
+
+addFact:parent(John,Jake)
+  parent(x,y)&lt;=father(x,y){};father(John,Jake)
+
+addFact:ancestor(John,Johnson)
+  ancestor(x,y)&lt;=parent(x,y){};parent(John,Johnson)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Johnson&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};parent(John,Johnson)
+
+addFact:ancestor(Mary,Johnson)
+  ancestor(x,y)&lt;=parent(x,y){};parent(Mary,Johnson)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;Mary&quot;,&quot;z&quot;:&quot;Johnson&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};parent(Mary,Johnson)
+
+addFact:ancestor(George,John)
+  ancestor(x,y)&lt;=parent(x,y){};parent(George,John)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;George&quot;,&quot;z&quot;:&quot;John&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};parent(George,John)
+
+addFact:ancestor(John,Jake)
+  ancestor(x,y)&lt;=parent(x,y){};parent(John,Jake)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Jake&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};parent(John,Jake)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;John&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(John,Johnson)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;Mary&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(Mary,Johnson)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;John&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(George,John)
+
+addFact:ancestor(George,Johnson)
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Johnson&quot;};ancestor(Ge
+orge,John)
+
+addFact:ancestor(George,Jake)
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Jake&quot;};ancestor(Georg
+e,John)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;John&quot;,&quot;y&quot;:&quot;Jake&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(John,Jake)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(George,Johnson)
+
+addRule:ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;Jake&quot;}
+  ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){};ancestor(George,Jake)
+
+======forwardChaining============
+=====facts========
+father(John,Johnson)
+mother(Mary,Johnson)
+father(George,John)
+father(John,Jake)
+parent(John,Johnson)
+parent(Mary,Johnson)
+parent(George,John)
+parent(John,Jake)
+ancestor(John,Johnson)
+ancestor(Mary,Johnson)
+ancestor(George,John)
+ancestor(John,Jake)
+ancestor(George,Johnson)
+ancestor(George,Jake)
+========rules=======
+parent(x,y)&lt;=father(x,y){}
+parent(x,y)&lt;=mother(x,y){}
+ancestor(x,y)&lt;=parent(x,y){}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Johnson&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;Mary&quot;,&quot;z&quot;:&quot;Johnson&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;George&quot;,&quot;z&quot;:&quot;John&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;y&quot;:&quot;John&quot;,&quot;z&quot;:&quot;Jake&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;John&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;Mary&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;John&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;John&quot;,&quot;y&quot;:&quot;Jake&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;Johnson&quot;}
+ancestor(x,z)&lt;=ancestor(x,y)&amp;parent(y,z){&quot;x&quot;:&quot;George&quot;,&quot;y&quot;:&quot;Jake&quot;}</code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>以上我們用 JavaScript 實作了一個簡易的謂詞邏輯推論引擎，採用洪氏邏輯的語法，以及前向推論 (forwardChaining) 的方式。</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

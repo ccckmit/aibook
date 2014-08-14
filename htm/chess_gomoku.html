@@ -1,0 +1,360 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作五子棋程式">實作：五子棋程式</a></li>
+</ul>
+</div>
+<h2 id="實作五子棋程式"><a href="#實作五子棋程式">實作：五子棋程式</a></h2>
+<h3 id="簡介"><a href="#簡介">簡介</a></h3>
+<p>在本文中，我們設計了一個完全只是依賴「盤面評估函數」的五子棋程式，這個程式並沒有採用「Min-Max 對局搜尋法」，更沒有採用「Alpha-Beta 修剪法」，但是已經能夠與一般人對戰，有時候還可以贏得棋局。</p>
+<p>以下是這個程式執行的一個畫面，我們採用命令列的設計方式，使用者下子時必須輸入格子的座標，該座標由兩個 16 進位字母組成，例如圖中的 62 代表下在第六列第二行的位置。</p>
+<div class="figure">
+<img src="../img/chess.jpg" alt="圖、五子棋程式的一個對局畫面" /><p class="caption">圖、五子棋程式的一個對局畫面</p>
+</div>
+<h3 id="程式實作"><a href="#程式實作">程式實作</a></h3>
+<p>整個程式的實作只包含以下這個 chess.js 檔案，完整原始碼如下。</p>
+<p>檔案：chess.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// 五子棋遊戲，單機命令列版</span>
+<span class="co">//   人對人下：node chess P2P</span>
+<span class="co">//   人對電腦：node chess P2C</span>
+<span class="co">// 作者：陳鍾誠</span>
+<span class="kw">var</span> util = <span class="fu">require</span>(<span class="st">&quot;util&quot;</span>);
+<span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+<span class="kw">var</span> r = <span class="fu">require</span>(<span class="st">&#39;readline&#39;</span>).<span class="fu">createInterface</span>(<span class="ot">process</span>.<span class="fu">stdin</span>, <span class="ot">process</span>.<span class="fu">stdout</span>);
+
+<span class="co">// 印出訊息，並取得輸入。</span>
+<span class="kw">var</span> prompt = <span class="kw">function</span>(turn) {
+  <span class="kw">var</span> msg = <span class="fu">format</span>(<span class="st">&#39;將 %s 下在 :    &#39;</span>, turn);
+  <span class="ot">r</span>.<span class="fu">setPrompt</span>(msg);
+  <span class="ot">r</span>.<span class="fu">prompt</span>();
+}
+
+<span class="kw">var</span> format = <span class="kw">function</span>() { <span class="co">// 字串格式化 </span>
+  <span class="kw">return</span> <span class="ot">util</span>.<span class="ot">format</span>.<span class="fu">apply</span>(<span class="kw">null</span>, arguments);
+}
+
+<span class="co">// 棋盤物件</span>
+<span class="kw">var</span> Board = <span class="kw">function</span>() {
+  <span class="kw">this</span>.<span class="fu">m</span> = [];
+  <span class="kw">for</span> (<span class="kw">var</span> r=<span class="dv">0</span>; r&lt;<span class="dv">16</span>; r++) {
+    <span class="kw">this</span>.<span class="fu">m</span>[r] = [];
+    <span class="kw">for</span> (<span class="kw">var</span> c=<span class="dv">0</span>; c&lt;<span class="dv">16</span>; c++)
+      <span class="kw">this</span>.<span class="fu">m</span>[r][c] = <span class="st">&#39;-&#39;</span>;
+  }
+}
+
+<span class="co">// 將棋盤格式化成字串</span>
+<span class="ot">Board</span>.<span class="ot">prototype</span>.<span class="fu">toString</span> = <span class="kw">function</span>() {
+  <span class="kw">var</span> str = <span class="st">&quot;  0 1 2 3 4 5 6 7 8 9 a b c d e f</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  <span class="kw">for</span> (<span class="kw">var</span> r=<span class="dv">0</span>; r&lt;<span class="dv">16</span>; r++) {
+    str += <span class="ot">r</span>.<span class="fu">toString</span>(<span class="dv">16</span>)+<span class="st">&quot; &quot;</span>+<span class="kw">this</span>.<span class="fu">m</span>[r].<span class="fu">join</span>(<span class="st">&quot; &quot;</span>)+<span class="st">&quot; &quot;</span>+<span class="ot">r</span>.<span class="fu">toString</span>(<span class="dv">16</span>)+<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  }
+  str += <span class="st">&quot;  0 1 2 3 4 5 6 7 8 9 a b c d e f</span><span class="ch">\n</span><span class="st">&quot;</span>;
+  <span class="kw">return</span> str;
+}
+
+<span class="co">// 顯示棋盤</span>
+<span class="ot">Board</span>.<span class="ot">prototype</span>.<span class="fu">show</span> = <span class="kw">function</span>() {
+  <span class="fu">log</span>(<span class="kw">this</span>.<span class="fu">toString</span>());
+}
+
+<span class="co">// 以下為遊戲相關資料與函數</span>
+<span class="co">// var zero = [ 0, 0, 0, 0, 0];</span>
+<span class="co">// var inc  = [-2,-1, 0, 1, 2];</span>
+<span class="co">// var dec  = [ 2, 1, 0,-1,-2];</span>
+<span class="kw">var</span> z9   = [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>];
+<span class="kw">var</span> i9   = [-<span class="dv">4</span>,-<span class="dv">3</span>,-<span class="dv">2</span>,-<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>];
+<span class="kw">var</span> d9   = [ <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>,-<span class="dv">1</span>,-<span class="dv">2</span>,-<span class="dv">3</span>,-<span class="dv">4</span>];
+<span class="kw">var</span> z5   = [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>];
+<span class="kw">var</span> i2   = <span class="ot">i9</span>.<span class="fu">slice</span>(<span class="dv">2</span>,-<span class="dv">2</span>);
+<span class="kw">var</span> d2   = <span class="ot">d9</span>.<span class="fu">slice</span>(<span class="dv">2</span>,-<span class="dv">2</span>);
+
+<span class="co">// 檢查在 (r, c) 這一格，規則樣式 (dr, dc) 是否被滿足</span>
+<span class="co">// dr, dc 的組合可用來代表「垂直 | , 水平 - , 下斜 \ , 上斜 /」。</span>
+<span class="kw">var</span> patternCheck=<span class="kw">function</span>(board, turn, r, c, dr, dc) {
+  <span class="kw">for</span> (<span class="kw">var</span> i = <span class="dv">0</span>; i &lt; <span class="ot">dr</span>.<span class="fu">length</span>; i++) {
+    <span class="kw">var</span> tr = <span class="ot">Math</span>.<span class="fu">round</span>(r+dr[i]);
+    <span class="kw">var</span> tc = <span class="ot">Math</span>.<span class="fu">round</span>(c+dc[i]);
+    <span class="kw">if</span> (tr&lt;<span class="dv">0</span> ||tr &gt; <span class="dv">15</span> || tc&lt;<span class="dv">0</span> || tc&gt;<span class="dv">15</span>)
+      <span class="kw">return</span> <span class="kw">false</span>;
+    <span class="kw">var</span> v = <span class="ot">board</span>.<span class="fu">m</span>[tr][tc];
+    <span class="kw">if</span> (v != turn) <span class="kw">return</span> <span class="kw">false</span>;
+  }
+  <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="co">// 檢查是否下 turn 這個子的人贏了。</span>
+<span class="kw">var</span> winCheck = <span class="kw">function</span>(board, turn) {
+  <span class="kw">var</span> win = <span class="kw">false</span>;
+  <span class="kw">for</span> (<span class="kw">var</span> r=<span class="dv">0</span>; r&lt;<span class="dv">16</span>; r++) {
+    <span class="kw">for</span> (<span class="kw">var</span> c=<span class="dv">0</span>; c&lt;<span class="dv">16</span>; c++) {
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, z5, i2)) <span class="co">// 垂直 | ;</span>
+        win = <span class="kw">true</span>;
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, i2, z5)) <span class="co">// 水平 - ;</span>
+        win = <span class="kw">true</span>;
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, i2, i2)) <span class="co">// 下斜 \ ;</span>
+        win = <span class="kw">true</span>;
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, i2, d2)) <span class="co">// 上斜 / ;</span>
+        win = <span class="kw">true</span>;
+    }
+  }
+  <span class="kw">if</span> (win) {
+    <span class="fu">log</span>(<span class="st">&quot;%s 贏了！&quot;</span>, turn);  <span class="co">// 如果贏了就印出贏了</span>
+    <span class="ot">process</span>.<span class="fu">exit</span>(<span class="dv">0</span>); <span class="co">// 然後離開。</span>
+  }
+  <span class="kw">return</span> win;
+}
+
+<span class="kw">var</span> peopleTurn = <span class="kw">function</span>(board, turn, line) {
+  <span class="kw">var</span> r = <span class="fu">parseInt</span>(line[<span class="dv">0</span>], <span class="dv">16</span>); <span class="co">// 取得下子的列 r (row)</span>
+  <span class="kw">var</span> c = <span class="fu">parseInt</span>(line[<span class="dv">1</span>], <span class="dv">16</span>); <span class="co">// 取得下子的行 c (column)</span>
+  <span class="kw">if</span> (r&lt;<span class="dv">0</span> || r&gt;<span class="dv">15</span> || c&lt;<span class="dv">0</span> || c&gt;<span class="dv">15</span>) <span class="co">// 檢查是否超出範圍</span>
+    <span class="kw">throw</span> <span class="st">&quot;(row, col) 超出範圍!&quot;</span>; <span class="co">// 若超出範圍就丟出例外，下一輪重新輸入。</span>
+  <span class="kw">if</span> (<span class="ot">board</span>.<span class="fu">m</span>[r][c] != <span class="st">&#39;-&#39;</span>) <span class="co">// 檢查該位置是否已被佔據</span>
+    <span class="kw">throw</span> <span class="fu">format</span>(<span class="st">&quot;(%s%s) 已經被佔領了!&quot;</span>, line[<span class="dv">0</span>], line[<span class="dv">1</span>]); <span class="co">// 若被佔據就丟出例外，下一輪重新輸入。</span>
+  <span class="ot">board</span>.<span class="fu">m</span>[r][c] = turn; <span class="co">// 否則、將子下在使用者輸入的 (r,c) 位置</span>
+}
+
+<span class="kw">var</span> P2P=<span class="kw">function</span>(b, turn, line) {
+  <span class="fu">peopleTurn</span>(b, turn, line);
+  <span class="ot">b</span>.<span class="fu">show</span>();         <span class="co">// 顯示棋盤現況</span>
+  <span class="fu">winCheck</span>(b, turn);
+  <span class="kw">return</span> (turn == <span class="st">&#39;o&#39;</span>)?<span class="st">&#39;x&#39;</span>:<span class="st">&#39;o&#39;</span>; <span class="co">// 換對方下了。</span>
+}
+
+<span class="kw">var</span> attackScores = [ <span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">10</span>, <span class="dv">30</span>, <span class="dv">100</span>, <span class="dv">500</span> ];
+<span class="kw">var</span> guardScores  = [ <span class="dv">0</span>, <span class="dv">2</span>,  <span class="dv">9</span>, <span class="dv">25</span>,  <span class="dv">90</span>, <span class="dv">400</span> ];
+<span class="kw">var</span> attack=<span class="dv">1</span>, guard=<span class="dv">2</span>;
+
+<span class="kw">var</span> getScore = <span class="kw">function</span>(board, r, c, turn, mode) {
+  <span class="kw">var</span> score = <span class="dv">0</span>;
+  <span class="kw">var</span> mScores = (mode === attack)?attackScores:guardScores;
+  <span class="ot">board</span>.<span class="fu">m</span>[r][c] = turn;
+  <span class="kw">for</span> (<span class="kw">var</span> start = <span class="dv">0</span>; start &lt;= <span class="dv">4</span>; start++) {
+    <span class="kw">for</span> (<span class="kw">var</span> len = <span class="dv">5</span>; len &gt;= <span class="dv">1</span>; len--) {
+      <span class="kw">var</span> end = start+len;
+      <span class="kw">var</span> zero = <span class="ot">z9</span>.<span class="fu">slice</span>(start, start+len);
+      <span class="kw">var</span> inc  = <span class="ot">i9</span>.<span class="fu">slice</span>(start, start+len);
+      <span class="kw">var</span> dec  = <span class="ot">d9</span>.<span class="fu">slice</span>(start, start+len);
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, zero, inc)) <span class="co">// 攻擊：垂直 | ;</span>
+        score += mScores[len];
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, inc, zero)) <span class="co">// 攻擊：水平 - ;</span>
+        score += mScores[len];
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, inc, inc)) <span class="co">// 攻擊：下斜 \ ;</span>
+        score += mScores[len];
+      <span class="kw">if</span> (<span class="fu">patternCheck</span>(board, turn, r, c, inc, dec)) <span class="co">// 攻擊：上斜 / ;</span>
+        score += mScores[len];
+    }
+  }
+  <span class="ot">board</span>.<span class="fu">m</span>[r][c] = <span class="st">&#39;-&#39;</span>;  
+  <span class="kw">return</span> score;
+}
+
+<span class="kw">var</span> computerTurn = <span class="kw">function</span>(board, turn) {
+  <span class="kw">var</span> best = { <span class="dt">r</span>:<span class="dv">0</span>, <span class="dt">c</span>:<span class="dv">0</span>, <span class="dt">score</span>:-<span class="dv">1</span> };
+  <span class="kw">for</span> (<span class="kw">var</span> r=<span class="dv">0</span>; r&lt;=<span class="dv">15</span>; r++) {
+    <span class="kw">for</span> (<span class="kw">var</span> c=<span class="dv">0</span>; c&lt;=<span class="dv">15</span>; c++) {
+      <span class="kw">if</span> (<span class="ot">board</span>.<span class="fu">m</span>[r][c] !== <span class="st">&#39;-&#39;</span>) 
+        <span class="kw">continue</span>;
+      <span class="kw">var</span> attackScore = <span class="fu">getScore</span>(board, r, c, <span class="st">&#39;x&#39;</span>, attack);  <span class="co">// 攻擊分數</span>
+      <span class="kw">var</span> guardScore  = <span class="fu">getScore</span>(board, r, c, <span class="st">&#39;o&#39;</span>, guard);   <span class="co">// 防守分數</span>
+      <span class="kw">var</span> score = attackScore+guardScore;
+      <span class="kw">if</span> (score &gt; <span class="ot">best</span>.<span class="fu">score</span>) {
+        <span class="ot">best</span>.<span class="fu">r</span> = r;
+        <span class="ot">best</span>.<span class="fu">c</span> = c;
+        <span class="ot">best</span>.<span class="fu">score</span> = score;
+      }
+    }
+  }
+  <span class="fu">log</span>(<span class="st">&quot;best=%j&quot;</span>, best);
+  <span class="ot">board</span>.<span class="fu">m</span>[<span class="ot">best</span>.<span class="fu">r</span>][<span class="ot">best</span>.<span class="fu">c</span>] = turn; <span class="co">// 否則、將子下在使用者輸入的 (r,c) 位置</span>
+}
+
+<span class="kw">var</span> P2C=<span class="kw">function</span>(b, turn, line) {
+  <span class="fu">peopleTurn</span>(b, <span class="st">&#39;o&#39;</span>, line);
+  <span class="ot">b</span>.<span class="fu">show</span>();         <span class="co">// 顯示棋盤現況</span>
+  <span class="fu">winCheck</span>(b, <span class="st">&#39;o&#39;</span>); <span class="co">// 檢查下了這子之後是否贏了！</span>
+  <span class="fu">computerTurn</span>(b, <span class="st">&#39;x&#39;</span>, line);
+  <span class="ot">b</span>.<span class="fu">show</span>();
+  <span class="fu">winCheck</span>(b, <span class="st">&#39;x&#39;</span>);
+  <span class="kw">return</span> <span class="st">&#39;o&#39;</span>;
+}
+
+<span class="kw">var</span> chess=<span class="kw">function</span>(doLine) {
+  <span class="co">// 主程式開始</span>
+  <span class="kw">var</span> b = <span class="kw">new</span> <span class="fu">Board</span>(); <span class="co">// 建立棋盤</span>
+  <span class="ot">b</span>.<span class="fu">show</span>();            <span class="co">// 顯示棋盤</span>
+  <span class="kw">var</span> turn = <span class="st">&#39;o&#39;</span>;      <span class="co">// o 先下</span>
+  <span class="fu">prompt</span>(turn);        <span class="co">// 提示要求下子訊息，並接受輸入。</span>
+  <span class="ot">r</span>.<span class="fu">on</span>(<span class="st">&#39;line&#39;</span>, <span class="kw">function</span>(line) { <span class="co">// 每當讀到一個字串時。</span>
+    <span class="kw">try</span> {
+      turn = <span class="fu">doLine</span>(b, turn, line);
+    } <span class="kw">catch</span> (err) { <span class="co">// 若有丟出例外</span>
+      <span class="fu">log</span>(err); <span class="co">// 則印出錯誤訊息。</span>
+    }
+    <span class="fu">prompt</span>(turn); <span class="co">// 提示要求下子訊息，並接受輸入。</span>
+  }).<span class="fu">on</span>(<span class="st">&#39;close&#39;</span>, <span class="kw">function</span>() { <span class="co">// 輸入結束了</span>
+    <span class="ot">process</span>.<span class="fu">exit</span>(<span class="dv">0</span>); <span class="co">// 程式結束。</span>
+  });
+}
+
+<span class="kw">if</span> (<span class="ot">process</span>.<span class="fu">argv</span>[<span class="dv">2</span>] === <span class="st">&quot;P2P&quot;</span>) <span class="co">// 人對人下</span>
+  <span class="fu">chess</span>(P2P);
+<span class="kw">else</span> <span class="kw">if</span> (<span class="ot">process</span>.<span class="fu">argv</span>[<span class="dv">2</span>] === <span class="st">&quot;P2C&quot;</span>) <span class="co">// 人對電腦下</span>
+  <span class="fu">chess</span>(P2C);
+<span class="kw">else</span> { <span class="co">// 命令下錯，提示訊息！</span>
+  <span class="fu">log</span>(<span class="st">&quot;人對人下：node chess P2P</span><span class="ch">\n</span><span class="st">人對電腦：node chess P2C&quot;</span>);
+  <span class="ot">process</span>.<span class="fu">exit</span>(<span class="dv">0</span>);
+}</code></pre>
+<h3 id="執行結果"><a href="#執行結果">執行結果</a></h3>
+<p>以下是一場對局的過程片段，您可以看到最後是 x 贏了，也就是人類贏了。</p>
+<pre><code>C:\Dropbox\Public\web\ai\code\chess&gt;node chess P2C
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+0 - - - - - - - - - - - - - - - - 0
+1 - - - - - - - - - - - - - - - - 1
+2 - - - - - - - - - - - - - - - - 2
+3 - - - - - - - - - - - - - - - - 3
+4 - - - - - - - - - - - - - - - - 4
+5 - - - - - - - - - - - - - - - - 5
+6 - - - - - - - - - - - - - - - - 6
+7 - - - - - - - - - - - - - - - - 7
+8 - - - - - - - - - - - - - - - - 8
+9 - - - - - - - - - - - - - - - - 9
+a - - - - - - - - - - - - - - - - a
+b - - - - - - - - - - - - - - - - b
+c - - - - - - - - - - - - - - - - c
+d - - - - - - - - - - - - - - - - d
+e - - - - - - - - - - - - - - - - e
+f - - - - - - - - - - - - - - - - f
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+
+將 o 下在 : 66
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+0 - - - - - - - - - - - - - - - - 0
+1 - - - - - - - - - - - - - - - - 1
+2 - - - - - - - - - - - - - - - - 2
+3 - - - - - - - - - - - - - - - - 3
+4 - - - - - - - - - - - - - - - - 4
+5 - - - - - - - - - - - - - - - - 5
+6 - - - - - - o - - - - - - - - - 6
+7 - - - - - - - - - - - - - - - - 7
+8 - - - - - - - - - - - - - - - - 8
+9 - - - - - - - - - - - - - - - - 9
+a - - - - - - - - - - - - - - - - a
+b - - - - - - - - - - - - - - - - b
+c - - - - - - - - - - - - - - - - c
+d - - - - - - - - - - - - - - - - d
+e - - - - - - - - - - - - - - - - e
+f - - - - - - - - - - - - - - - - f
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+
+best={&quot;r&quot;:6,&quot;c&quot;:7,&quot;score&quot;:31}
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+0 - - - - - - - - - - - - - - - - 0
+1 - - - - - - - - - - - - - - - - 1
+2 - - - - - - - - - - - - - - - - 2
+3 - - - - - - - - - - - - - - - - 3
+4 - - - - - - - - - - - - - - - - 4
+5 - - - - - - - - - - - - - - - - 5
+6 - - - - - - o x - - - - - - - - 6
+7 - - - - - - - - - - - - - - - - 7
+8 - - - - - - - - - - - - - - - - 8
+9 - - - - - - - - - - - - - - - - 9
+a - - - - - - - - - - - - - - - - a
+b - - - - - - - - - - - - - - - - b
+c - - - - - - - - - - - - - - - - c
+d - - - - - - - - - - - - - - - - d
+e - - - - - - - - - - - - - - - - e
+f - - - - - - - - - - - - - - - - f
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+
+...
+
+best={&quot;r&quot;:6,&quot;c&quot;:3,&quot;score&quot;:144}
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+0 - - - - - - - - - - - - - - - - 0
+1 - - - - - - - - - - - - - - - - 1
+2 - - - - - - - - - - - - - - - - 2
+3 - - - - - - - - - - - - - - - - 3
+4 - - - - x - - - - - - - - - - - 4
+5 - - - - - o - - - - - - - - - - 5
+6 - - - x o o o x - - - - - - - - 6
+7 - - - - - - - o - - - - - - - - 7
+8 - - - - - - - - x - - - - - - - 8
+9 - - - - - - - - - x - - - - - - 9
+a - - - - - - - - - - - - - - - - a
+b - - - - - - - - - - - - - - - - b
+c - - - - - - - - - - - - - - - - c
+d - - - - - - - - - - - - - - - - d
+e - - - - - - - - - - - - - - - - e
+f - - - - - - - - - - - - - - - - f
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+...
+
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+0 - - - - - - - - - - - - - - - - 0
+1 - - - - - - - - - - - - - - - - 1
+2 - - - - - - - - - - - - - - - - 2
+3 - - - - - - - - - - - - - - - - 3
+4 - - - - x - - - - - - - - - - - 4
+5 - - o - - o - - - - - - - - - - 5
+6 - - o x o o o x - - - - - - - - 6
+7 - - - - x o o o - - - - - - - - 7
+8 - - - - - x - - x - - - - - - - 8
+9 - - - - - - x - - x - - - - - - 9
+a - - - - - - - x - - - - - - - - a
+b - - - - - - - - - - - - - - - - b
+c - - - - - - - - - - - - - - - - c
+d - - - - - - - - - - - - - - - - d
+e - - - - - - - - - - - - - - - - e
+f - - - - - - - - - - - - - - - - f
+  0 1 2 3 4 5 6 7 8 9 a b c d e f
+
+x 贏了！</code></pre>
+<h3 id="參考文獻"><a href="#參考文獻">參考文獻</a></h3>
+<ul>
+<li><a href="http://zh.wikipedia.org/zh-tw/%E4%BA%94%E5%AD%90%E6%A3%8B">維基百科：五子棋</a></li>
+</ul>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

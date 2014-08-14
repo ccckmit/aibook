@@ -1,0 +1,475 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作多層感知器與反傳遞演算法">實作：多層感知器與反傳遞演算法</a></li>
+</ul>
+</div>
+<h2 id="實作多層感知器與反傳遞演算法"><a href="#實作多層感知器與反傳遞演算法">實作：多層感知器與反傳遞演算法</a></h2>
+<h3 id="前言"><a href="#前言">前言</a></h3>
+<p>在前一篇文章中，我們討論了「單層感知器」的實作方式，然而單層感知器並沒有辦法處理像 XOR 這樣的函數。</p>
+<p>為了提升「感知器」的能力，我們可以在輸入與輸出節點之間，再加入一些隱藏層，並透過這些隱藏層對整個學習空間進行更多次的分割，以便能處理 XOR 這類難以用單一線性函數分割的問題。</p>
+<p>但是加入了隱藏層之後，感知器的學習與訓練就更為複雜了，這時必須有足夠的「數學理論」才能為「多層感知器」提供一個方向，而「反傳遞演算法」 (Back-Propagation) 正是這樣一個可以提供「多層感知器」學習方向的好東西，其數學基礎則是建構在多變數微分「梯度」概念之上的一種「梯度下降法」。</p>
+<p>事實上、反傳遞演算法 (Back-Propagation) 的概念在 1974 年就由 Paul J. Werbos 所提出來了，但沒有受到重視，後來在 1986 年又被 Rumelhart 重新發明了出來，而且受到了廣泛的重視。</p>
+<p>在本文中，我們將說明「多層感知器」與「反傳遞演算法」的概念，並用 Node.js+JavaScript 進行實作。</p>
+<h3 id="模型與數學原理"><a href="#模型與數學原理">模型與數學原理</a></h3>
+<p>以下是本文程式所採用的一個「多層感知器」模型，其中包含「輸入層、隱藏層與輸出層」，這種多層感知器與上一篇「單層感知器」的一個明顯不同點，在於擁有一個隱藏層，因此其能力增強了很多。</p>
+<div class="figure">
+<img src="../img/MLP.jpg" alt="圖、多層感知器模型 (本圖含一個隱藏層)" /><p class="caption">圖、多層感知器模型 (本圖含一個隱藏層)</p>
+</div>
+<p>既然反傳遞演算法是一種梯度下降法，那麼我們只要能計算出梯度的方向，就能讓「多層感知器」的權重朝著能量下降最快的方向前進。</p>
+<p>但是、梯度要怎麼計算呢？先讓我們來看一張多變數的能量曲線圖。</p>
+<div class="figure">
+<img src="../img/Gradient.jpg" alt="圖、曲面與每一點的梯度向量" /><p class="caption">圖、曲面與每一點的梯度向量</p>
+</div>
+<p>在上圖中，底下的平面上所畫的向量，就是上面那個曲面在該點梯度的投影，指示了該平面最陡的下降方向。</p>
+<p>在直覺概念上，曲面上某一點的梯度，其實是曲面在該點切平面的法向量，梯度的計算公式如下：</p>
+<div class="figure">
+<img src="../timg/4d0383fdb044.jpg" />
+</div>
+<p>如果我們可以計算某函數之梯度的話，只要朝著梯度的方向走去，就是最快下降的道路了。</p>
+<p>採用這種沿著梯度方向往下走的方法，就稱為「梯度下降法」(Gradient Descent)，這種方法可以說是一種「貪婪演算法」(Greedy Algorithm)，因為它每次都朝著最斜的方向走去，企圖得到最大的下降幅度。</p>
+<p>為了要計算梯度，我們不能採用「單層感知器裏的那種不可微分的 sign() 步階函數」 (如下圖 a 所示)，因為這樣就不能用微積分的方式計算出梯度了，而必須改用可以微分的連續函數 sigmoid() (如下圖 b 所示)，這樣才能夠透過微分計算出梯度。</p>
+<div class="figure">
+<img src="../img/MLP_neuron.jpg" alt="圖、兩種神經元之比較" /><p class="caption">圖、兩種神經元之比較</p>
+</div>
+<p>當我們改成可微分的 sigmoid() 函數之後，就可以運用微積分公式，事先求出其微分函數 dsigmoid() 。舉例而言、在本文的程式中，我們就用了雙曲正切函數 tanh(x) 作為 sigmoid() 函數，其定義如下所示：</p>
+<div class="figure">
+<img src="../timg/0a7a7dbd3516.jpg" />
+</div>
+<div class="figure">
+<img src="../timg/7621e383e2fc.jpg" />
+</div>
+<div class="figure">
+<img src="../timg/fb1e12546ddc.jpg" />
+</div>
+<p>由於 tanh(x) 的微分是 <img src="../timg/cd7b4072bc59.jpg" /> ，因此在下列這段程式中，我們定義了這些函數的計算方式。</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tanh=<span class="kw">function</span>(x) {
+  <span class="kw">return</span> (<span class="ot">Math</span>.<span class="fu">exp</span>(x) - <span class="ot">Math</span>.<span class="fu">exp</span>(-x)) / (<span class="ot">Math</span>.<span class="fu">exp</span>(x) + <span class="ot">Math</span>.<span class="fu">exp</span>(-x));
+}
+
+<span class="kw">function</span> <span class="fu">sigmoid</span>(x) {
+  <span class="kw">return</span> <span class="fu">tanh</span>(x); <span class="co">// 表現較好</span>
+}
+
+<span class="kw">function</span> <span class="fu">dsigmoid</span>(x) {
+  <span class="kw">return</span> <span class="fl">1.0</span> - x*x;
+}</code></pre>
+<p>上述程式中 dsigmoid(y) 中的 <code>1.0 - x*x</code> 則是 y=tanh(x) 的微分式，對每個 y=tanh(x) 都取微分式的時候，其實就是梯度的方向。</p>
+<p>(筆者註：有些實作會採用 <img src="../timg/ae4a7a4a574d.jpg" /> 作為 sigmoid() 函數，這與 tanh(x) 函數的形狀非常類似，也是一種可行的方法)。</p>
+<h3 id="程式碼"><a href="#程式碼">程式碼</a></h3>
+<p>檔案：backprop.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">// Back-Propagation Neural Networks (JavaScript 版)</span>
+<span class="co">// 由陳鍾誠修改自 Neil Schemenauer 的 Python 版</span>
+<span class="co">// Python 程式網址為： http://arctrix.com/nas/python/bpnn.py</span>
+
+<span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+
+<span class="co">// 建立大小為 n 的陣列並填入初始值 fill</span>
+<span class="kw">var</span> makeArray=<span class="kw">function</span>(n, fill) {
+  <span class="kw">var</span> a = [];
+  <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;n; i++)
+    <span class="ot">a</span>.<span class="fu">push</span>(fill);
+  <span class="kw">return</span> a;
+}
+
+<span class="co">// 建立大小為 I*J 的矩陣並填入初始值 fill</span>
+<span class="kw">var</span> makeMatrix=<span class="kw">function</span>(I, J, fill) {
+  <span class="kw">var</span> m = [];
+  <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;I; i++)
+    <span class="ot">m</span>.<span class="fu">push</span>(<span class="fu">makeArray</span>(J, fill));
+  <span class="kw">return</span> m;
+}
+
+<span class="co">// numbersToStr():以精確度為 precision 個小數來輸出陣列 array</span>
+<span class="kw">var</span> numbersToStr=<span class="kw">function</span>(array, precision) {
+  <span class="kw">var</span> rzStr = <span class="st">&quot;&quot;</span>;
+  <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="ot">array</span>.<span class="fu">length</span>; i++) {
+    <span class="kw">if</span> (array[i]&gt;=<span class="dv">0</span>)
+      rzStr+=<span class="st">&quot; &quot;</span>+array[i].<span class="fu">toFixed</span>(precision)+<span class="st">&quot; &quot;</span>;
+    <span class="kw">else</span>
+      rzStr+=array[i].<span class="fu">toFixed</span>(precision)+<span class="st">&quot; &quot;</span>;
+  }
+  <span class="kw">return</span> rzStr;
+}
+
+<span class="co">// rand():取得 a 到 b 之間的一個隨機亂數</span>
+<span class="kw">var</span> rand=<span class="kw">function</span>(a, b) {
+  <span class="kw">return</span> (b-a)*<span class="ot">Math</span>.<span class="fu">random</span>() + a;
+}
+
+<span class="co">// sigmoid(x)=tanh(x)</span>
+<span class="kw">function</span> <span class="fu">sigmoid</span>(x) {
+  <span class="kw">var</span> tanh = (<span class="ot">Math</span>.<span class="fu">exp</span>(x) - <span class="ot">Math</span>.<span class="fu">exp</span>(-x)) / (<span class="ot">Math</span>.<span class="fu">exp</span>(x) + <span class="ot">Math</span>.<span class="fu">exp</span>(-x));
+  <span class="kw">return</span> tanh; <span class="co">// 雙曲正切函數</span>
+}
+
+<span class="co">// dsigmoid(x)=1-x^2;</span>
+<span class="co">// 參考：http://pynopticon.googlecode.com/svn/trunk/src/vlfeat/toolbox/special/dsigmoid.m</span>
+<span class="co">// 參考：http://en.wikipedia.org/wiki/Sigmoid_function</span>
+<span class="kw">function</span> <span class="fu">dsigmoid</span>(x) {
+  <span class="kw">return</span> <span class="fl">1.0</span> - x*x;
+}
+
+<span class="kw">function</span> <span class="fu">NeuralNet</span>() {
+
+  <span class="co">// init()：設定網路結構與權重的隨機初始值的函數。</span>
+  <span class="kw">this</span>.<span class="fu">init</span>=<span class="kw">function</span>(ni, nh, no) {
+    <span class="co">// number of input, hidden, and output nodes</span>
+    <span class="kw">this</span>.<span class="fu">ni</span> = ni + <span class="dv">1</span>; <span class="co">// +1 for bias node</span>
+    <span class="kw">this</span>.<span class="fu">nh</span> = nh;
+    <span class="kw">this</span>.<span class="fu">no</span> = no;
+
+    <span class="co">// activations for nodes : 建立各層的節點陣列</span>
+    <span class="kw">this</span>.<span class="fu">ai</span> = <span class="fu">makeArray</span>(<span class="kw">this</span>.<span class="fu">ni</span>, <span class="fl">1.0</span>);
+    <span class="kw">this</span>.<span class="fu">ah</span> = <span class="fu">makeArray</span>(<span class="kw">this</span>.<span class="fu">nh</span>, <span class="fl">1.0</span>);
+    <span class="kw">this</span>.<span class="fu">ao</span> = <span class="fu">makeArray</span>(<span class="kw">this</span>.<span class="fu">no</span>, <span class="fl">1.0</span>);
+        
+    <span class="co">// create weights : 建立權重矩陣</span>
+    <span class="kw">this</span>.<span class="fu">wi</span> = <span class="fu">makeMatrix</span>(<span class="kw">this</span>.<span class="fu">ni</span>, <span class="kw">this</span>.<span class="fu">nh</span>, <span class="fl">0.0</span>);
+    <span class="kw">this</span>.<span class="fu">wo</span> = <span class="fu">makeMatrix</span>(<span class="kw">this</span>.<span class="fu">nh</span>, <span class="kw">this</span>.<span class="fu">no</span>, <span class="fl">0.0</span>);
+        
+    <span class="co">// set them to random vaules : 隨機設定權重初始值。</span>
+    <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="kw">this</span>.<span class="fu">ni</span>; i++)
+      <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++)
+        <span class="kw">this</span>.<span class="fu">wi</span>[i][j] = <span class="fu">rand</span>(-<span class="fl">0.2</span>, <span class="fl">0.2</span>);
+    <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++)
+      <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="kw">this</span>.<span class="fu">no</span>; k++)
+        <span class="kw">this</span>.<span class="fu">wo</span>[j][k] = <span class="fu">rand</span>(-<span class="fl">2.0</span>, <span class="fl">2.0</span>);
+
+    <span class="co">// last change in weights for momentum  : 上一次的改變量矩陣，用來當動量以便爬過肩型區域。</span>
+    <span class="kw">this</span>.<span class="fu">ci</span> = <span class="fu">makeMatrix</span>(<span class="kw">this</span>.<span class="fu">ni</span>, <span class="kw">this</span>.<span class="fu">nh</span>, <span class="fl">0.0</span>);
+    <span class="kw">this</span>.<span class="fu">co</span> = <span class="fu">makeMatrix</span>(<span class="kw">this</span>.<span class="fu">nh</span>, <span class="kw">this</span>.<span class="fu">no</span>, <span class="fl">0.0</span>);
+    <span class="kw">return</span> <span class="kw">this</span>;
+  }
+    
+  <span class="co">// update() : 計算網路的輸出的函數</span>
+  <span class="kw">this</span>.<span class="fu">update</span>=<span class="kw">function</span>(inputs) {
+    <span class="co">// input activations : 設定輸入值</span>
+    <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="kw">this</span>.<span class="fu">ni</span><span class="dv">-1</span>; i++)
+      <span class="kw">this</span>.<span class="fu">ai</span>[i] = inputs[i];
+
+    <span class="co">// hidden activations : 計算隱藏層輸出值 ah[j]</span>
+    <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++) {
+      <span class="kw">var</span> sum = <span class="fl">0.0</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="kw">this</span>.<span class="fu">ni</span>; i++)
+        sum = sum + <span class="kw">this</span>.<span class="fu">ai</span>[i] * <span class="kw">this</span>.<span class="fu">wi</span>[i][j];
+      <span class="kw">this</span>.<span class="fu">ah</span>[j] = <span class="fu">sigmoid</span>(sum);
+    }
+
+    <span class="co">// output activations : 計算輸出層輸出值 ao[k]</span>
+    <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="kw">this</span>.<span class="fu">no</span>; k++) {
+      <span class="kw">var</span> sum = <span class="fl">0.0</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++)
+        sum = sum + <span class="kw">this</span>.<span class="fu">ah</span>[j] * <span class="kw">this</span>.<span class="fu">wo</span>[j][k];
+      <span class="kw">this</span>.<span class="fu">ao</span>[k] = <span class="fu">sigmoid</span>(sum);
+    }
+
+    <span class="kw">return</span> <span class="kw">this</span>.<span class="fu">ao</span>; <span class="co">// 傳回輸出層輸出值 ao</span>
+  }
+
+  <span class="co">// backPropagate()：反傳遞學習的函數 (重要)</span>
+  <span class="kw">this</span>.<span class="fu">backPropagate</span> = <span class="kw">function</span>(targets, rate, moment) {
+    <span class="co">// calculate error terms for output : 計算輸出層誤差</span>
+    <span class="kw">var</span> output_deltas = <span class="fu">makeArray</span>(<span class="kw">this</span>.<span class="fu">no</span>, <span class="fl">0.0</span>);
+    <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="kw">this</span>.<span class="fu">no</span>; k++) {
+      <span class="kw">var</span> error = targets[k]-<span class="kw">this</span>.<span class="fu">ao</span>[k];
+      output_deltas[k] = <span class="fu">dsigmoid</span>(<span class="kw">this</span>.<span class="fu">ao</span>[k]) * error;
+    }
+
+    <span class="co">// calculate error terms for hidden : 計算隱藏層誤差</span>
+    <span class="kw">var</span> hidden_deltas = <span class="fu">makeArray</span>(<span class="kw">this</span>.<span class="fu">nh</span>, <span class="fl">0.0</span>);
+    <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++) {
+      <span class="kw">var</span> error = <span class="fl">0.0</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="kw">this</span>.<span class="fu">no</span>; k++) {
+              <span class="co">// 注意、在此輸出層誤差 output_deltas 會反傳遞到隱藏層，因此才稱為反傳遞演算法。</span>
+        error = error + output_deltas[k]*<span class="kw">this</span>.<span class="fu">wo</span>[j][k]; 
+          }
+      hidden_deltas[j] = <span class="fu">dsigmoid</span>(<span class="kw">this</span>.<span class="fu">ah</span>[j]) * error;
+    }
+
+    <span class="co">// update output weights : 更新輸出層權重</span>
+    <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++) {
+      <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="kw">this</span>.<span class="fu">no</span>; k++) {
+        <span class="kw">var</span> change = output_deltas[k]*<span class="kw">this</span>.<span class="fu">ah</span>[j];
+        <span class="kw">this</span>.<span class="fu">wo</span>[j][k] = <span class="kw">this</span>.<span class="fu">wo</span>[j][k] + rate*change + moment*<span class="kw">this</span>.<span class="fu">co</span>[j][k];
+        <span class="kw">this</span>.<span class="fu">co</span>[j][k] = change;
+        <span class="co">// print N*change, M*this.co[j][k]</span>
+      }
+    }
+
+    <span class="co">// update input weights : 更新輸入層權重</span>
+    <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="kw">this</span>.<span class="fu">ni</span>; i++) {
+      <span class="kw">for</span> (<span class="kw">var</span> j=<span class="dv">0</span>; j&lt;<span class="kw">this</span>.<span class="fu">nh</span>; j++) {
+        <span class="kw">var</span> change = hidden_deltas[j]*<span class="kw">this</span>.<span class="fu">ai</span>[i];
+        <span class="kw">this</span>.<span class="fu">wi</span>[i][j] = <span class="kw">this</span>.<span class="fu">wi</span>[i][j] + rate*change + moment*<span class="kw">this</span>.<span class="fu">ci</span>[i][j];
+        <span class="kw">this</span>.<span class="fu">ci</span>[i][j] = change;
+      }
+    }
+
+    <span class="co">// calculate error : 計算輸出層誤差總合</span>
+    <span class="kw">var</span> error = <span class="fl">0.0</span>;
+    <span class="kw">for</span> (<span class="kw">var</span> k=<span class="dv">0</span>; k&lt;<span class="ot">targets</span>.<span class="fu">length</span>; k++)
+      error = error + <span class="fl">0.5</span>*<span class="ot">Math</span>.<span class="fu">pow</span>(targets[k]-<span class="kw">this</span>.<span class="fu">ao</span>[k],<span class="dv">2</span>);
+    <span class="kw">return</span> error;
+  }
+
+    <span class="co">// test() : 對真值表 (訓練樣本) 中的每個輸入都印出「網路輸出」與「期望輸出」，以便觀察學習結果是否都正確。</span>
+  <span class="kw">this</span>.<span class="fu">test</span> = <span class="kw">function</span>(patterns) {
+    <span class="kw">for</span> (<span class="kw">var</span> p <span class="kw">in</span> patterns) {
+      <span class="kw">var</span> inputs = patterns[p][<span class="dv">0</span>];
+      <span class="kw">var</span> outputs= patterns[p][<span class="dv">1</span>];
+      <span class="fu">log</span>(<span class="st">&quot;%j -&gt; [%s] [%s]&quot;</span>, inputs, <span class="fu">numbersToStr</span>(<span class="kw">this</span>.<span class="fu">update</span>(inputs), <span class="dv">0</span>), <span class="fu">numbersToStr</span>(outputs, <span class="dv">0</span>));
+      <span class="co">// this.dump();</span>
+    }
+  }
+
+    <span class="co">// train(): 主要學習函數，反覆呼叫反傳遞算法</span>
+    <span class="co">// 參數：rate: learning rate (學習速率), moment: momentum factor (動量常數)</span>
+  <span class="kw">this</span>.<span class="fu">train</span>=<span class="kw">function</span>(patterns, iterations, rate, moment) {
+    <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;iterations; i++) {
+      <span class="kw">var</span> error = <span class="fl">0.0</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> p <span class="kw">in</span> patterns) {
+        <span class="kw">var</span> pat=patterns[p];
+        <span class="kw">var</span> inputs = pat[<span class="dv">0</span>];
+        <span class="kw">var</span> targets = pat[<span class="dv">1</span>];
+        <span class="kw">var</span> outputs = <span class="kw">this</span>.<span class="fu">update</span>(inputs);
+        error = error + <span class="kw">this</span>.<span class="fu">backPropagate</span>(targets, rate, moment);
+      }
+      <span class="kw">if</span> (i % <span class="dv">100</span> == <span class="dv">0</span>)
+        <span class="fu">log</span>(<span class="st">&#39;%d:error %j&#39;</span>, i, error);
+    }
+  }
+}
+
+<span class="ot">module</span>.<span class="fu">exports</span> = NeuralNet; <span class="co">// 匯出 NeuralNet 物件。</span></code></pre>
+<h3 id="執行範例-1-學習-xor-函數"><a href="#執行範例-1-學習-xor-函數">執行範例 1 : 學習 XOR 函數</a></h3>
+<p>檔案：backprop_xor.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> NN = <span class="fu">require</span>(<span class="st">&quot;./backprop&quot;</span>);
+
+pat = [
+  [[<span class="dv">0</span>,<span class="dv">0</span>], [<span class="dv">0</span>]],
+  [[<span class="dv">0</span>,<span class="dv">1</span>], [<span class="dv">1</span>]],
+  [[<span class="dv">1</span>,<span class="dv">0</span>], [<span class="dv">1</span>]],
+  [[<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">0</span>]]
+];
+
+<span class="co">// create a network with two input, two hidden, and one output nodes</span>
+nn = <span class="kw">new</span> <span class="fu">NN</span>().<span class="fu">init</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>);
+<span class="co">// train it with some patterns</span>
+<span class="ot">nn</span>.<span class="fu">train</span>(pat, <span class="dv">1000</span>, <span class="fl">0.5</span>, <span class="fl">0.1</span>);
+<span class="co">// test it</span>
+<span class="ot">nn</span>.<span class="fu">test</span>(pat);</code></pre>
+<p>執行結果：</p>
+<pre><code>D:\Dropbox\Public\web\ai\code\neural&gt;node backprop_xor
+0:error 1.1411586806597014
+100:error 0.15669092345306487
+200:error 0.0044566959936791035
+300:error 0.0018489705409186357
+400:error 0.0011477205633429219
+500:error 0.0008277968129286529
+600:error 0.0006456614467953627
+700:error 0.005231441443909679
+800:error 0.0004595906757934737
+900:error 0.0003945408066808508
+[0,0] -&gt; [ 0 ] [ 0 ]
+[0,1] -&gt; [ 1 ] [ 1 ]
+[1,0] -&gt; [ 1 ] [ 1 ]
+[1,1] -&gt; [-0 ] [ 0 ]</code></pre>
+<h3 id="執行範例-2-學習七段顯示器函數"><a href="#執行範例-2-學習七段顯示器函數">執行範例 2 : 學習七段顯示器函數</a></h3>
+<p>檔案：backprop_7seg.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="co">/* 七段顯示器排列圖示</span>
+<span class="co">  A</span>
+<span class="co">F   B</span>
+<span class="co">  G</span>
+<span class="co">E   C</span>
+<span class="co">  D</span>
+<span class="co">*/</span>
+
+<span class="kw">var</span> NN = <span class="fu">require</span>(<span class="st">&quot;./backprop&quot;</span>);
+
+pat = [
+ <span class="co">// A B C D E F G </span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>], [<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]], <span class="co">// 0</span>
+  [[<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>], [<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>]], <span class="co">// 1</span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>]], <span class="co">// 2</span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>]], <span class="co">// 3</span>
+  [[<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>]], <span class="co">// 4</span>
+  [[<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>]], <span class="co">// 5</span>
+  [[<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>]], <span class="co">// 6</span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>], [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>]], <span class="co">// 7</span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]], <span class="co">// 8</span>
+  [[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>], [<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>]]  <span class="co">// 9</span>
+];
+
+<span class="co">// create a network with 7 input, 5 hidden, and 4 output nodes</span>
+nn = <span class="kw">new</span> <span class="fu">NN</span>().<span class="fu">init</span>(<span class="dv">7</span>, <span class="dv">5</span>, <span class="dv">4</span>);
+<span class="co">// train it with some patterns</span>
+<span class="ot">nn</span>.<span class="fu">train</span>(pat, <span class="dv">10000</span>, <span class="fl">0.2</span>, <span class="fl">0.01</span>);
+<span class="co">// test it</span>
+<span class="ot">nn</span>.<span class="fu">test</span>(pat);</code></pre>
+<p>執行結果：</p>
+<pre><code>D:\Dropbox\Public\web\ai\code\neural&gt;node backprop_7seg
+0:error 21.80370718175807
+100:error 3.0996784544877736
+200:error 2.9554663137424373
+300:error 2.9322332121195545
+400:error 0.9175505320368402
+500:error 0.5911840202045504
+600:error 0.6702566860375645
+700:error 0.6175745429758741
+800:error 0.6073471516556047
+900:error 0.601200049561361
+1000:error 0.5810463514787689
+1100:error 0.5364677212922591
+1200:error 0.532025286869445
+1300:error 0.46666848524996085
+1400:error 0.48129628693742754
+1500:error 0.8155362088747744
+1600:error 0.5829386518767099
+1700:error 0.6944742612114545
+1800:error 0.49717362214697597
+1900:error 0.40957109669176334
+2000:error 0.5388564563993076
+2100:error 0.3703582901903478
+2200:error 0.5178647638260341
+2300:error 0.1764373289120007
+2400:error 0.25347246319196093
+2500:error 0.33310966813566406
+2600:error 0.17106878914718923
+2700:error 0.1365002209754472
+2800:error 0.1594051132697459
+2900:error 0.3070991793860354
+3000:error 0.3766039636947747
+3100:error 0.3555367190225767
+3200:error 0.11555541960454409
+3300:error 0.11367500949340971
+3400:error 0.12234128181753154
+3500:error 0.1675446667610037
+3600:error 0.09044262748000728
+3700:error 0.08628776394501735
+3800:error 0.27906234926518514
+3900:error 0.04818459875532369
+4000:error 0.062418918530088664
+4100:error 0.2804289611800696
+4200:error 0.13725495522690973
+4300:error 0.12719742994691247
+4400:error 0.07177660395615833
+4500:error 0.08548411758763816
+4600:error 0.03974217740792855
+4700:error 0.09595126476746213
+4800:error 0.03853494372617759
+4900:error 0.06360901767700806
+5000:error 0.07246959735102428
+5100:error 0.05362418748287888
+5200:error 0.04669033343340621
+5300:error 0.03270696475959521
+5400:error 0.03940008954106113
+5500:error 0.047208537352753516
+5600:error 0.049368429554604215
+5700:error 0.042625347453785954
+5800:error 0.056241589618292134
+5900:error 0.016798400589135128
+6000:error 0.03404851177897533
+6100:error 0.028972975396903942
+6200:error 0.01572555942490573
+6300:error 0.048110746037786964
+6400:error 0.039118552165591194
+6500:error 0.03954060666366999
+6600:error 0.047240563507126423
+6700:error 0.013729342899560402
+6800:error 0.03734015049471263
+6900:error 0.04385222818693631
+7000:error 0.038098235270263764
+7100:error 0.014325393180305138
+7200:error 0.039093361005808284
+7300:error 0.011914229228792664
+7400:error 0.012490068609142688
+7500:error 0.010110888778014877
+7600:error 0.017266400583083073
+7700:error 0.037972260655506615
+7800:error 0.010317947862704183
+7900:error 0.02181165885044425
+8000:error 0.033354842242808616
+8100:error 0.033244707069915634
+8200:error 0.02269772865101642
+8300:error 0.008219315372175379
+8400:error 0.03342460798252796
+8500:error 0.008080093519395289
+8600:error 0.02466937317542233
+8700:error 0.03307092886686206
+8800:error 0.033433889409569414
+8900:error 0.031423007039930506
+9000:error 0.018154152094468162
+9100:error 0.008635680953338276
+9200:error 0.030890671102892397
+9300:error 0.009020762345545542
+9400:error 0.015823853695083934
+9500:error 0.029353956299920176
+9600:error 0.03028116871034789
+9700:error 0.03009059907189612
+9800:error 0.025996249652393937
+9900:error 0.009595759182954272
+[1,1,1,1,1,1,0] -&gt; [ 0  0 -0 -0 ] [ 0  0  0  0 ]
+[0,1,1,0,0,0,0] -&gt; [ 0 -0 -0  1 ] [ 0  0  0  1 ]
+[1,1,0,1,1,0,1] -&gt; [-0 -0  1  0 ] [ 0  0  1  0 ]
+[1,1,1,1,0,0,1] -&gt; [-0  0  1  1 ] [ 0  0  1  1 ]
+[0,1,1,0,0,1,1] -&gt; [ 0  1 -0  0 ] [ 0  1  0  0 ]
+[1,0,1,1,0,1,1] -&gt; [-0  1 -0  1 ] [ 0  1  0  1 ]
+[1,0,1,1,1,1,1] -&gt; [-0  1  1  0 ] [ 0  1  1  0 ]
+[1,1,1,0,0,0,0] -&gt; [-0  1  1  1 ] [ 0  1  1  1 ]
+[1,1,1,1,1,1,1] -&gt; [ 1 -0 -0  0 ] [ 1  0  0  0 ]
+[1,1,1,1,0,1,1] -&gt; [ 1  0 -0  1 ] [ 1  0  0  1 ]</code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>您可以看到上述兩個訓練案例，都是完全正確的，這代表反傳遞演算法可以讓多層感知器學會 XOR 與七段顯示器的函數。</p>
+<p>當然、多層感知器也可以學會更難的問題，像是手寫的數字與英文字辨認等等，手寫中文辨認和語音辨認當然也是可行的，只不過需要很多的訓練範例與節點，學習的效果才會夠好就是了！</p>
+<h3 id="參考文獻"><a href="#參考文獻">參考文獻</a></h3>
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Backpropagation">Wikipedia:Backpropagation</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Multilayer_perceptron">Wikipedia:Multilayer perceptron</a></li>
+<li><a href="http://zh.wikipedia.org/wiki/%E5%8F%8D%E5%90%91%E4%BC%A0%E6%92%AD%E7%AE%97%E6%B3%95">維基百科:反向傳播演算法</a></li>
+<li><a href="http://zh.wikipedia.org/wiki/%E5%A4%9A%E5%B1%82%E6%84%9F%E7%9F%A5%E6%9C%BA">維基百科:多層感知機</a></li>
+</ul>
+<p>【本文由陳鍾誠取材並修改自 [維基百科]，採用創作共用的 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/">姓名標示、相同方式分享</a> 授權】</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

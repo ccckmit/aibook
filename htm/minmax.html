@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#min-max-策略搜尋----alpha-beta-修剪法">Min-Max 策略搜尋 -- Alpha-Beta 修剪法</a><ul>
+<li><a href="#參考文獻">參考文獻</a></li>
+</ul></li>
+</ul>
+</div>
+<h1 id="min-max-策略搜尋----alpha-beta-修剪法"><a href="#min-max-策略搜尋----alpha-beta-修剪法">Min-Max 策略搜尋 -- Alpha-Beta 修剪法</a></h1>
+<pre><code>  algorithm AlphaBeta(x: node, level, lowBound, maxBound:integer):integer
+    if terminal(x) or level=0 then  
+       return e(x)
+    else
+       ans = lb
+       for i=1 to childNumber do
+         temp = -alphaBeta( child[i], level-1, -maxBound, -ans)
+         if ans &lt; temp then ans = temp
+         if ans &gt; maxBound then break
+       endfor
+       ab = ans
+    endif
+  end algorithm</code></pre>
+<h2 id="參考文獻"><a href="#參考文獻">參考文獻</a></h2>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

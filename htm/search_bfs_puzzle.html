@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作以廣度優先搜尋解決拼圖問題">實作：以廣度優先搜尋解決拼圖問題</a></li>
+</ul>
+</div>
+<h2 id="實作以廣度優先搜尋解決拼圖問題"><a href="#實作以廣度優先搜尋解決拼圖問題">實作：以廣度優先搜尋解決拼圖問題</a></h2>
+<h3 id="前言"><a href="#前言">前言</a></h3>
+<p>以下的「拼圖問題」是將一個已經移動打亂過的拼盤，想辦法移動回原本樣子的問題。</p>
+<div class="figure">
+<img src="../img/puzzle.jpg" alt="圖、本文程式中的拼圖問題" /><p class="caption">圖、本文程式中的拼圖問題</p>
+</div>
+<p>在以下程式中，我們用一個 3*3 的陣列來代表拼盤，並且用數字 0 來代表其中的空格，因此將方塊 2 移動到空格，其實是用將 0 與 2 兩個數字位置交換所達成的。</p>
+<p>透過這樣的資料結構，我們就可以用「廣度優先搜尋」(BFS) 來解決拼圖問題了，以下是我們用 JavaScript 實作，並用 node.js 進行測試的結果。</p>
+<h3 id="程式實作拼圖問題"><a href="#程式實作拼圖問題">程式實作：拼圖問題</a></h3>
+<p>檔案：puzzleSearch.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> util = <span class="fu">require</span>(<span class="st">&quot;util&quot;</span>);
+<span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+<span class="kw">var</span> up = <span class="dv">1</span>, right=<span class="dv">2</span>, down=<span class="dv">3</span>, left=<span class="dv">4</span>;
+
+<span class="kw">function</span> <span class="fu">enqueue</span>(a, o) { <span class="ot">a</span>.<span class="fu">push</span>(o); }
+<span class="kw">function</span> <span class="fu">dequeue</span>(a) { <span class="kw">return</span> <span class="ot">a</span>.<span class="fu">shift</span>(); }
+<span class="kw">function</span> <span class="fu">equal</span>(a, b) { <span class="kw">return</span> <span class="ot">JSON</span>.<span class="fu">stringify</span>(a)===<span class="ot">JSON</span>.<span class="fu">stringify</span>(b); }
+<span class="kw">function</span> <span class="fu">board2str</span>(b) { <span class="kw">return</span> <span class="ot">b</span>.<span class="fu">join</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>); }
+
+<span class="kw">function</span> <span class="fu">findXY</span>(board, value) {
+  <span class="kw">for</span> (<span class="kw">var</span> x=<span class="dv">0</span>; x&lt;<span class="ot">board</span>.<span class="fu">length</span>; x++)
+    <span class="kw">for</span> (<span class="kw">var</span> y=<span class="dv">0</span>; y&lt;board[x].<span class="fu">length</span>; y++)
+      <span class="kw">if</span> (board[x][y] === value)
+        <span class="kw">return</span> {<span class="dt">x</span>:x,<span class="dt">y</span>:y};
+  <span class="kw">return</span> <span class="kw">null</span>;
+}
+
+<span class="kw">function</span> <span class="fu">boardClone</span>(b) {
+  <span class="kw">var</span> nb = [];
+  <span class="kw">for</span> (<span class="kw">var</span> x <span class="kw">in</span> b)
+    nb[x] = b[x].<span class="fu">slice</span>(<span class="dv">0</span>);
+  <span class="kw">return</span> nb;
+}
+
+<span class="kw">function</span> <span class="fu">swap</span>(b,x1,y1,x2,y2) {
+  x2 = <span class="ot">Math</span>.<span class="fu">round</span>(x2), y2=<span class="ot">Math</span>.<span class="fu">round</span>(y2);
+  <span class="kw">if</span> (x2&lt;<span class="dv">0</span> || x2 &gt; <span class="dv">2</span> || y2&lt;<span class="dv">0</span> || y2&gt;<span class="dv">2</span>) 
+    <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">var</span> t = b[x1][y1];
+  b[x1][y1]=b[x2][y2];
+  b[x2][y2]=t;
+  <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="kw">function</span> <span class="fu">move</span>(board, dir) {
+  <span class="kw">var</span> xy = <span class="fu">findXY</span>(board, <span class="dv">0</span>);
+  <span class="kw">var</span> x = <span class="ot">xy</span>.<span class="fu">x</span>, y=<span class="ot">xy</span>.<span class="fu">y</span>;
+  <span class="kw">var</span> nboard = <span class="fu">boardClone</span>(board);
+  <span class="kw">var</span> s = <span class="kw">false</span>;
+  <span class="kw">switch</span> (dir) {
+    <span class="kw">case</span> <span class="dt">up</span>:    s=<span class="fu">swap</span>(nboard,x,y,x<span class="dv">-1</span>,y); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="dt">right</span>: s=<span class="fu">swap</span>(nboard,x,y,x,y<span class="dv">+1</span>); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="dt">down</span>:  s=<span class="fu">swap</span>(nboard,x,y,x<span class="dv">+1</span>,y); <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="dt">left</span>:  s=<span class="fu">swap</span>(nboard,x,y,x,y<span class="dv">-1</span>); <span class="kw">break</span>;
+  }
+  <span class="kw">if</span> (s)
+    <span class="kw">return</span> nboard;
+  <span class="kw">else</span>
+    <span class="kw">return</span> <span class="kw">null</span>;
+}
+
+<span class="kw">function</span> <span class="fu">moveAdd</span>(board, dir, neighbors) {
+  <span class="kw">var</span> nboard = <span class="fu">move</span>(board, dir);
+  <span class="kw">if</span> (nboard !== <span class="kw">null</span>) {
+    <span class="ot">neighbors</span>.<span class="fu">push</span>(nboard);
+  }
+}
+
+<span class="kw">function</span> <span class="fu">getNeighbors</span>(board) {
+  <span class="kw">var</span> neighbors = [];
+  <span class="fu">moveAdd</span>(board, up,    neighbors);
+  <span class="fu">moveAdd</span>(board, down,  neighbors);
+  <span class="fu">moveAdd</span>(board, right, neighbors);
+  <span class="fu">moveAdd</span>(board, left,  neighbors);
+  <span class="kw">return</span> neighbors;
+}
+
+<span class="kw">var</span> goal = [[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>], 
+            [<span class="dv">8</span>,<span class="dv">0</span>,<span class="dv">4</span>],
+            [<span class="dv">7</span>,<span class="dv">6</span>,<span class="dv">5</span>]];
+
+<span class="kw">var</span> start= [[<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">4</span>], 
+            [<span class="dv">8</span>,<span class="dv">2</span>,<span class="dv">5</span>],
+            [<span class="dv">7</span>,<span class="dv">0</span>,<span class="dv">6</span>]];
+
+<span class="kw">var</span> queue=[start];            <span class="co">// BFS 用的 queue, 起始點為 1。</span>
+<span class="kw">var</span> visited={};
+<span class="kw">var</span> parent={};
+<span class="kw">var</span> level={};
+
+<span class="kw">function</span> <span class="fu">bfs</span>(q, goal) { <span class="co">// 廣度優先搜尋</span>
+  <span class="kw">while</span> (<span class="ot">q</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+    <span class="kw">var</span> node = <span class="fu">dequeue</span>(q);     <span class="co">// 否則、取出 queue 的第一個節點。</span>
+    <span class="kw">var</span> nodestr = <span class="fu">board2str</span>(node);
+<span class="co">//  log(&quot;q.length=%d level=%d\n===node===\n%s==parent==\n%s&quot;, q.length, level[nodestr], nodestr, parent[nodestr]); // 印出節點</span>
+    <span class="kw">if</span> (<span class="fu">equal</span>(node, goal)) <span class="kw">return</span> <span class="kw">true</span>;
+    <span class="kw">if</span> (visited[nodestr]===<span class="kw">undefined</span>)        <span class="co">// 如果該節點尚未拜訪過。</span>
+      visited[nodestr] = <span class="kw">true</span>; <span class="co">//   標示為已拜訪</span>
+    <span class="kw">else</span>                       <span class="co">// 否則 (已訪問過)</span>
+      <span class="kw">continue</span>;                <span class="co">//   不繼續搜尋，直接返回。</span>
+    <span class="kw">var</span> neighbors = <span class="fu">getNeighbors</span>(node); <span class="co">// 取出鄰居。</span>
+    <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> neighbors) { <span class="co">// 對於每個鄰居</span>
+      <span class="kw">var</span> n = neighbors[i];
+      <span class="kw">var</span> nstr = <span class="fu">board2str</span>(n);
+      <span class="kw">if</span> (!visited[nstr]) {    <span class="co">// 假如該鄰居還沒被拜訪過</span>
+        parent[nstr] = nodestr;
+    level[nstr] = level[nodestr] + <span class="dv">1</span>;
+        <span class="fu">enqueue</span>(q, n);         <span class="co">//   就放入 queue 中</span>
+      }
+    }
+  }
+  <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="kw">function</span> <span class="fu">backtrace</span>(goal) {
+  <span class="fu">log</span>(<span class="st">&quot;======= backtrace =========&quot;</span>);
+  <span class="kw">var</span> nodestr = <span class="fu">board2str</span>(goal);
+  <span class="kw">while</span> (nodestr !== <span class="kw">undefined</span>) {
+    <span class="fu">log</span>(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, nodestr);
+    nodestr = parent[nodestr];
+  }
+}
+
+level[<span class="fu">board2str</span>(start)]=<span class="dv">0</span>;
+<span class="kw">var</span> found = <span class="fu">bfs</span>(queue, goal); <span class="co">// 呼叫廣度優先搜尋。</span>
+<span class="fu">log</span>(<span class="st">&quot;bfs:found=%s&quot;</span>, found);
+<span class="kw">if</span> (found)
+  <span class="fu">backtrace</span>(goal);</code></pre>
+<h3 id="執行結果"><a href="#執行結果">執行結果</a></h3>
+<pre><code>D:\Dropbox\Public\web\ai\code\search&gt;node puzzleSearch.js
+bfs:found=true
+======= backtrace =========
+1,2,3
+8,0,4
+7,6,5
+
+1,0,3
+8,2,4
+7,6,5
+
+1,3,0
+8,2,4
+7,6,5
+
+1,3,4
+8,2,0
+7,6,5
+
+1,3,4
+8,2,5
+7,6,0
+
+1,3,4
+8,2,5
+7,0,6</code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>在上述執行結果中，我們是將盤面拼完後，才逆向追蹤印出移動過程，因此整個移動方法應該從最下面的盤面看起。換句話說，真正的順序如下：</p>
+<pre><code>1,3,4    1,3,4    1,3,4     1,3,0    1,0,3    1,2,3
+8,2,5 =&gt; 8,2,5 =&gt; 8,2,0 =&gt;  8,2,4 =&gt; 8,2,4 =&gt; 8,0,4
+7,0,6    7,6,0    7,6,5     7,6,5    7,6,5    7,6,5</code></pre>
+<p>從上面過程中，您可以看出我們的程式將打亂的盤面給拼回來了。</p>
+<p>【本文由陳鍾誠取材並修改自 [維基百科]，採用創作共用的 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/">姓名標示、相同方式分享</a> 授權】</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

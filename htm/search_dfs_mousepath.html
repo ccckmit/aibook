@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作以深度優先搜尋解決老鼠走迷宮問題">實作：以深度優先搜尋解決老鼠走迷宮問題</a></li>
+</ul>
+</div>
+<h2 id="實作以深度優先搜尋解決老鼠走迷宮問題"><a href="#實作以深度優先搜尋解決老鼠走迷宮問題">實作：以深度優先搜尋解決老鼠走迷宮問題</a></h2>
+<h3 id="前言"><a href="#前言">前言</a></h3>
+<p>雖然深度優先搜尋 (DFS) 與廣度優先搜尋 (BFS) 等演算法通常是用在「圖形」這種結構上的，不過「圖形」的結構倒是不一定要真實且完整的表達出來，在很多人工智慧的問題上，我們不會看到完整的「圖形結構」，只會看到某個節點有哪些鄰居節點，然後就可以用 BFS 與 DFS 進行搜尋了。</p>
+<p>老鼠走迷宮問題，就是一個可以採用圖形搜尋來解決的經典問題，其中每個節點的鄰居，就是上下左右四個方向，只要沒有被牆給擋住，就可以走到鄰居節點去，因此我們可以採用圖形搜尋的方法來解決迷宮問題，以下是我們的程式實作。</p>
+<h3 id="程式實作老鼠走迷宮"><a href="#程式實作老鼠走迷宮">程式實作：老鼠走迷宮</a></h3>
+<p>檔案：pathFinder.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+
+<span class="kw">function</span> <span class="fu">matrixPrint</span>(m) {
+  <span class="kw">for</span>(<span class="kw">var</span> i=<span class="dv">0</span>;i&lt;<span class="ot">m</span>.<span class="fu">length</span>;i++)
+    <span class="fu">log</span>(m[i]);
+}
+
+<span class="kw">function</span> <span class="fu">strset</span>(s, i, c) {
+  <span class="kw">return</span> <span class="ot">s</span>.<span class="fu">substr</span>(<span class="dv">0</span>, i) + c + <span class="ot">s</span>.<span class="fu">substr</span>(i<span class="dv">+1</span>);
+}
+
+<span class="kw">function</span> <span class="fu">findPath</span>(m, x, y) {
+  <span class="fu">log</span>(<span class="st">&quot;=========================&quot;</span>);
+  <span class="fu">log</span>(<span class="st">&quot;x=&quot;</span>+x+<span class="st">&quot; y=&quot;</span>+y);
+  <span class="fu">matrixPrint</span>(m);
+  <span class="kw">if</span> (x&gt;=<span class="dv">6</span>||y&gt;=<span class="dv">8</span>) <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">if</span> (m[x][y] == <span class="st">&#39;*&#39;</span>) <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">if</span> (m[x][y] == <span class="st">&#39;+&#39;</span>) <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">if</span> (m[x][y] == <span class="st">&#39; &#39;</span>) m[x] = <span class="fu">strset</span>(m[x], y, <span class="st">&#39;.&#39;</span>);
+  <span class="kw">if</span> (m[x][y] == <span class="st">&#39;.&#39;</span> &amp;&amp; (x == <span class="dv">5</span> || y==<span class="dv">7</span>)) 
+    <span class="kw">return</span> <span class="kw">true</span>;
+  <span class="kw">if</span> (y&lt;<span class="dv">7</span>&amp;&amp;m[x][y<span class="dv">+1</span>]==<span class="st">&#39; &#39;</span>) <span class="co">//向右</span>
+    <span class="kw">if</span> (<span class="fu">findPath</span>(m, x,y<span class="dv">+1</span>)) <span class="kw">return</span> <span class="kw">true</span>;
+  <span class="kw">if</span>(x&lt;<span class="dv">5</span>&amp;&amp;m[x<span class="dv">+1</span>][y]==<span class="st">&#39; &#39;</span>) <span class="co">//向下</span>
+    <span class="kw">if</span> (<span class="fu">findPath</span>(m, x<span class="dv">+1</span>,y)) <span class="kw">return</span> <span class="kw">true</span>;
+  <span class="kw">if</span>(y&gt;<span class="dv">0</span>&amp;&amp;m[x][y<span class="dv">-1</span>]==<span class="st">&#39; &#39;</span>) <span class="co">//向左</span>
+    <span class="kw">if</span> (<span class="fu">findPath</span>(m, x,y<span class="dv">-1</span>)) <span class="kw">return</span> <span class="kw">true</span>;
+  <span class="kw">if</span>(x&gt;<span class="dv">0</span>&amp;&amp;m[x<span class="dv">-1</span>][y]==<span class="st">&#39; &#39;</span>) <span class="co">//向上</span>
+    <span class="kw">if</span> (<span class="fu">findPath</span>(m, x<span class="dv">-1</span>,y)) <span class="kw">return</span> <span class="kw">true</span>;
+  m[x][y]=<span class="st">&#39;+&#39;</span>;
+  <span class="kw">return</span> <span class="kw">false</span>;
+}
+
+<span class="kw">var</span> m =[<span class="st">&quot;********&quot;</span>, 
+        <span class="st">&quot;** * ***&quot;</span>,
+        <span class="st">&quot;     ***&quot;</span>,
+        <span class="st">&quot;* ******&quot;</span>,
+        <span class="st">&quot;*     **&quot;</span>,
+        <span class="st">&quot;***** **&quot;</span>];
+    
+<span class="fu">findPath</span>(m, <span class="dv">2</span>, <span class="dv">0</span>);
+<span class="fu">log</span>(<span class="st">&quot;=========================&quot;</span>);
+<span class="fu">matrixPrint</span>(m);</code></pre>
+<h3 id="執行結果"><a href="#執行結果">執行結果</a></h3>
+<pre><code>D:\Dropbox\Public\web\ai\code\search&gt;node pathFinder.js
+=========================
+x=2 y=0
+********
+** * ***
+     ***
+* ******
+*     **
+***** **
+=========================
+x=2 y=1
+********
+** * ***
+.    ***
+* ******
+*     **
+***** **
+=========================
+x=2 y=2
+********
+** * ***
+..   ***
+* ******
+*     **
+***** **
+=========================
+x=2 y=3
+********
+** * ***
+...  ***
+* ******
+*     **
+***** **
+=========================
+x=2 y=4
+********
+** * ***
+.... ***
+* ******
+*     **
+***** **
+=========================
+x=1 y=4
+********
+** * ***
+.....***
+* ******
+*     **
+***** **
+=========================
+x=1 y=2
+********
+** *.***
+.....***
+* ******
+*     **
+***** **
+=========================
+x=3 y=1
+********
+**.*.***
+.....***
+* ******
+*     **
+***** **
+=========================
+x=4 y=1
+********
+**.*.***
+.....***
+*.******
+*     **
+***** **
+=========================
+x=4 y=2
+********
+**.*.***
+.....***
+*.******
+*.    **
+***** **
+=========================
+x=4 y=3
+********
+**.*.***
+.....***
+*.******
+*..   **
+***** **
+=========================
+x=4 y=4
+********
+**.*.***
+.....***
+*.******
+*...  **
+***** **
+=========================
+x=4 y=5
+********
+**.*.***
+.....***
+*.******
+*.... **
+***** **
+=========================
+x=5 y=5
+********
+**.*.***
+.....***
+*.******
+*.....**
+***** **
+=========================
+********
+**.*.***
+.....***
+*.******
+*.....**
+*****.**</code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>在上面的輸出結果中，<code>*</code> 代表該位置是牆壁，而空格則代表是可以走的路，老鼠走過的地方會放下一個 <code>.</code> 符號，於是您可以看到在上述程式的輸出中，老鼠最後走出了迷宮，完成了任務。</p>
+<p>【本文由陳鍾誠取材並修改自 [維基百科]，採用創作共用的 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/">姓名標示、相同方式分享</a> 授權】</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

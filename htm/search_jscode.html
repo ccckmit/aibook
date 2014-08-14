@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作深度與廣度搜尋法">實作：深度與廣度搜尋法</a></li>
+</ul>
+</div>
+<h2 id="實作深度與廣度搜尋法"><a href="#實作深度與廣度搜尋法">實作：深度與廣度搜尋法</a></h2>
+<h3 id="簡介"><a href="#簡介">簡介</a></h3>
+<p>為了進一步理解深度優先搜尋 (Depth-First Search) 與廣度優先搜尋 (Breath-First Search) ，我們將在本文中採用 JavaScript 實作這兩個圖形搜尋算法，並且在 node.js 平台上進行測試。</p>
+<p>在以下程式中，變數 g 代表下列圖形，而程式中的 dfs() 函數代表深度優先搜尋算法，bfs() 函數代表廣度優先搜尋算法。</p>
+<div class="figure">
+<img src="../img/graphSearch.jpg" alt="圖、圖形 Graph 的範例" /><p class="caption">圖、圖形 Graph 的範例</p>
+</div>
+<h3 id="程式實作"><a href="#程式實作">程式實作</a></h3>
+<p>檔案：graphSearch.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> util = <span class="fu">require</span>(<span class="st">&quot;util&quot;</span>);
+
+<span class="kw">var</span> printf = <span class="kw">function</span>() {
+  <span class="kw">return</span> <span class="ot">process</span>.<span class="ot">stdout</span>.<span class="fu">write</span>(<span class="ot">util</span>.<span class="ot">format</span>.<span class="fu">apply</span>(<span class="kw">null</span>, arguments)); 
+}
+
+<span class="kw">function</span> <span class="fu">enqueue</span>(a, o) { <span class="ot">a</span>.<span class="fu">push</span>(o); }
+<span class="kw">function</span> <span class="fu">dequeue</span>(a) { <span class="kw">return</span> <span class="ot">a</span>.<span class="fu">shift</span>(); }
+
+<span class="kw">var</span> g = {            <span class="co">// graph: 被搜尋的網路</span>
+  <span class="dv">1</span>: {<span class="dt">n</span>:[<span class="dv">2</span>,<span class="dv">5</span>], <span class="dt">v</span>:<span class="dv">0</span>}, <span class="co">// n: neighbor (鄰居), v: visited (是否被訪問過)</span>
+  <span class="dv">2</span>: {<span class="dt">n</span>:[<span class="dv">3</span>,<span class="dv">4</span>], <span class="dt">v</span>:<span class="dv">0</span>},
+  <span class="dv">3</span>: {<span class="dt">n</span>:[<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>], <span class="dt">v</span>:<span class="dv">0</span>},
+  <span class="dv">4</span>: {<span class="dt">n</span>:[<span class="dv">5</span>,<span class="dv">6</span>], <span class="dt">v</span>:<span class="dv">0</span>},
+  <span class="dv">5</span>: {<span class="dt">n</span>:[<span class="dv">6</span>], <span class="dt">v</span>:<span class="dv">0</span>},
+  <span class="dv">6</span>: {<span class="dt">n</span>:[], <span class="dt">v</span>:<span class="dv">0</span>}
+};
+
+<span class="kw">function</span> <span class="fu">init</span>(g) { <span class="co">// 初始化、設定 visited 為 0</span>
+  <span class="kw">for</span> (i <span class="kw">in</span> g) g[i].<span class="fu">v</span> = <span class="dv">0</span>;
+}
+
+<span class="kw">function</span> <span class="fu">dfs</span>(g, node) { <span class="co">// 深度優先搜尋</span>
+  <span class="kw">if</span> (g[node].<span class="fu">v</span> !=<span class="dv">0</span>) <span class="kw">return</span>;   <span class="co">// 如果已訪問過，就不再訪問</span>
+  <span class="fu">printf</span>(<span class="st">&quot;%d=&gt;&quot;</span>, node);       <span class="co">// 否則、印出節點</span>
+  g[node].<span class="fu">v</span> = <span class="dv">1</span>;              <span class="co">//   並設定為已訪問</span>
+  <span class="kw">var</span> neighbors = g[node].<span class="fu">n</span>;  <span class="co">// 取出鄰居節點</span>
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> neighbors) {  <span class="co">// 對於每個鄰居</span>
+    <span class="fu">dfs</span>(g, neighbors[i]);     <span class="co">//   逐一進行訪問</span>
+  }
+}
+
+<span class="kw">var</span> queue=[<span class="dv">1</span>];            <span class="co">// BFS 用的 queue, 起始點為 1。</span>
+
+<span class="kw">function</span> <span class="fu">bfs</span>(g, q) { <span class="co">// 廣度優先搜尋</span>
+  <span class="kw">if</span> (<span class="ot">q</span>.<span class="fu">length</span> == <span class="dv">0</span>) <span class="kw">return</span>; <span class="co">// 如果 queue 已空，則返回。</span>
+  <span class="kw">var</span> node = <span class="fu">dequeue</span>(q);     <span class="co">// 否則、取出 queue 的第一個節點。</span>
+  <span class="kw">if</span> (g[node].<span class="fu">v</span> == <span class="dv">0</span>)        <span class="co">// 如果該節點尚未拜訪過。</span>
+    g[node].<span class="fu">v</span> = <span class="dv">1</span>;           <span class="co">//   標示為已拜訪</span>
+  <span class="kw">else</span>                       <span class="co">// 否則 (已訪問過)</span>
+    <span class="kw">return</span>;                  <span class="co">//   不繼續搜尋，直接返回。</span>
+  <span class="fu">printf</span>(<span class="st">&quot;%d=&gt;&quot;</span>, node);      <span class="co">// 印出節點</span>
+  <span class="kw">var</span> neighbors = g[node].<span class="fu">n</span>; <span class="co">// 取出鄰居。</span>
+  <span class="kw">for</span> (<span class="kw">var</span> i <span class="kw">in</span> neighbors) { <span class="co">// 對於每個鄰居</span>
+    <span class="kw">var</span> n = neighbors[i];
+    <span class="kw">if</span> (!g[n].<span class="fu">visited</span>)       <span class="co">// 假如該鄰居還沒被拜訪過</span>
+      <span class="ot">q</span>.<span class="fu">push</span>(n);             <span class="co">//   就放入 queue 中</span>
+  }
+  <span class="fu">bfs</span>(g, q);
+}
+
+<span class="fu">printf</span>(<span class="st">&quot;dfs:&quot;</span>); <span class="fu">init</span>(g); <span class="fu">dfs</span>(g, <span class="dv">1</span>); <span class="fu">printf</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>);     <span class="co">// 呼叫深度優先搜尋。</span>
+<span class="fu">printf</span>(<span class="st">&quot;bfs:&quot;</span>); <span class="fu">init</span>(g); <span class="fu">bfs</span>(g, queue); <span class="fu">printf</span>(<span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>); <span class="co">// 呼叫廣度優先搜尋。</span></code></pre>
+<h3 id="執行結果"><a href="#執行結果">執行結果</a></h3>
+<pre><code>D:\Dropbox\Public\web\ai\code\search&gt;node graphSearch.js
+dfs:1=&gt;2=&gt;3=&gt;4=&gt;5=&gt;6=&gt;
+bfs:1=&gt;2=&gt;5=&gt;3=&gt;4=&gt;6=&gt;</code></pre>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>從以上範例您可以看到 BFS 與 DFS 之差異，不過我們沒有為節點加入好壞的評估函數，因此沒有實作最佳優先搜尋，或許讀者可以自行嘗試修改看看。</p>
+<p>【本文由陳鍾誠取材並修改自 [維基百科]，採用創作共用的 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/">姓名標示、相同方式分享</a> 授權】</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

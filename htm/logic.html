@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#邏輯推論與專家系統">邏輯推論與專家系統</a><ul>
+<li><a href="#布林邏輯">布林邏輯</a></li>
+<li><a href="#謂詞邏輯">謂詞邏輯</a></li>
+<li><a href="#一階邏輯">一階邏輯</a></li>
+<li><a href="#二階邏輯">二階邏輯</a></li>
+<li><a href="#專家系統">專家系統</a></li>
+</ul></li>
+</ul>
+</div>
+<h1 id="邏輯推論與專家系統"><a href="#邏輯推論與專家系統">邏輯推論與專家系統</a></h1>
+<h2 id="布林邏輯"><a href="#布林邏輯">布林邏輯</a></h2>
+<p>在布林邏輯中，只有用來代表真假值的簡單變數，像是 A, B, C, X, Y, Z .... 等，所以邏輯算式看來通常如下：</p>
+<ul>
+<li>P &amp; (P=&gt;Q) =&gt; Q.</li>
+<li>A &amp; B &amp; C =&gt; D | E.</li>
+<li>-(A &amp; B) &lt;=&gt; -A | -B.</li>
+</ul>
+<p>這種布林命題邏輯裏沒有函數的概念，只有簡單的命題 (Proposition)，因此布林邏輯也稱為命題邏輯 (Propositional Logic)。</p>
+<h2 id="謂詞邏輯"><a href="#謂詞邏輯">謂詞邏輯</a></h2>
+<p>而在謂詞邏輯裏，則有「布林函數」的概念，因此其表達能力較強，例如以下是一些謂詞邏輯的範例。</p>
+<ul>
+<li>Parent(x,y) &lt;= Father(x,y).</li>
+<li>Parent(John, Johnson).</li>
+<li>Ancestor(x,y) &lt;= Parent(x,y).</li>
+<li>Ancestor(x,y) &lt;= Ancestor(x,z) &amp; Parent(z,y).</li>
+</ul>
+<p>您可以看到在這種邏輯系統裏，有「布林變數」的概念 (像是 x, y, z 等等)，也有函數的概念，像是 Parent(), Father(), Ancestor() 等等。</p>
+<h2 id="一階邏輯"><a href="#一階邏輯">一階邏輯</a></h2>
+<p>在上述這種謂詞邏輯系統中，如果我們加上 <img src="../timg/8b141f94d437.jpg" /> (對於所有) 或 <img src="../timg/297f1fa5c654.jpg" /> (存在) 這兩個變數限定符號，而其中的謂詞不可以是變項，而必須要是常項，這種邏輯就稱為一階邏輯。</p>
+<ul>
+<li><img src="../timg/514fcee4eee7.jpg" /> ; 人都是會死的。</li>
+<li><img src="../timg/622fa223aee6.jpg" /> ; 蘇格拉底是人。</li>
+<li><img src="../timg/66f17dc26b90.jpg" /> ; 蘇格拉底會死。</li>
+</ul>
+<p>當然、規則可以更複雜，像是以下這個範例，就說明了「存在一些人可以永遠被欺騙」。</p>
+<ul>
+<li><img src="../timg/d37038cf1d92.jpg" title="fig:" /></li>
+</ul>
+<h2 id="二階邏輯"><a href="#二階邏輯">二階邏輯</a></h2>
+<p>如果一階邏輯中的謂詞，放寬成可以是變項的話 (這些變項可以加上 <img src="../timg/8b141f94d437.jpg" /> 與 <img src="../timg/32ff223f4b92.jpg" /> 等符號的約束)，那就變成了二階邏輯，以下是一些二階邏輯的規則範例。</p>
+<ul>
+<li><img src="../timg/d12b91ab3a7b.jpg" /><br /></li>
+<li><img src="../timg/41d3eb0c5f8c.jpg" /></li>
+<li><img src="../timg/d01e95cc8ac8.jpg" /> ; 數學歸納法。</li>
+</ul>
+<h2 id="專家系統"><a href="#專家系統">專家系統</a></h2>
+<p>透過邏輯推論的方式，我們很容易就可以建構出一種「問題-回答」系統，這種系統會根據邏輯規則進行推論，讓您透過對話的方式得到問題的答案，以下是一個「動物分類專家系統」的範例。</p>
+<p>動物世界規則庫 : animal.kb</p>
+<pre><code>哺乳類 &lt;= 有毛. 
+哺乳類 &lt;= 泌乳. 
+鳥類   &lt;= 有羽毛. 
+鳥類   &lt;= 會飛 &amp; 生蛋. 
+食肉類 &lt;= 哺乳類 &amp; 吃肉.
+食肉類 &lt;= 有爪 &amp; 利齒 &amp; 兩眼前視.
+有蹄類 &lt;= 哺乳類 &amp; 有蹄.
+偶蹄類 &lt;= 哺乳類 &amp; 反芻.
+獵豹   &lt;= 哺乳類 &amp; 吃肉 &amp; 斑點.
+老虎   &lt;= 哺乳類 &amp; 吃肉 &amp; 條紋.
+長頸鹿 &lt;= 有蹄類 &amp; 長腿 &amp; 斑點.
+斑馬   &lt;= 有蹄類 &amp; 條紋.
+鴕鳥   &lt;= 鳥類 &amp; 長腿.</code></pre>
+<p>此時如果您在對話中描述某些事實，例如以下的範例：</p>
+<pre><code>問題：請問該動物有毛嗎? (1. 有毛 2. 沒毛)
+請選擇 =&gt; 1
+
+問題：請問該動物吃肉嗎? (1. 吃肉 2. 不吃肉)
+請選擇 =&gt; 1
+
+問題：請問該動物有條紋或斑點嗎? (1. 有條紋 2. 有斑點 3. 兩者皆無)
+請選擇 =&gt; 1
+
+回答：您所描述的動物應該是「老虎」。
+
+## 推理引擎
+
+我們可以用程式撰寫出「布林邏輯、謂詞邏輯、一階邏輯」等系統的推理引擎。
+
+推理引擎的設計方法大致可分為下列三類：
+
+1. 前向推論： 從「已知事實」開始不斷的進行規則比對，推論出所有目前能推論出的「新事實」，然後將這些新事實加入「新知識庫」中，直到推論出終端結果為止。
+
+舉例而言、當我們在「動物規則庫」的世界裏，輸入「有毛」時，則會推論出「哺乳類」這個結論。
+
+此時、如果再輸入「吃肉」這個「新事實」，那麼由於「哺乳類」已經在「新知識庫」中了，所以就會推論出「食肉類」。
+
+接著、如果我們再度輸入「條紋」這個「新事實」，那麼推論系統就會推論出「老虎」這個結論。
+
+2. 後向推論：從問題開始，透過不斷的反向連結，產生新的問題，一但某規則的所有問題都已經被滿足，則可推出該規則的結論。
+
+舉例而言、假如有一個「家族世界」的規則庫如下。
+</code></pre>
+<p>parent(x,y) &lt;= father(x,y). parent(x,y) &lt;= mother(x,y). ancestor(x,y) &lt;= parent(x,y). ancestor(x,z) &lt;= ancestor(x,y) &amp; parent(y,z).</p>
+<p>father(John, Johnson). mother(Mary, Johnson). father(George, John). father(John, Jake). ```</p>
+<p>當我們輸入 ancestor(p, Johnson) 時，則後向堆論引擎與 ancestor(x,z) 比對符合後會觸發下列規則：</p>
+<pre><code>ancestor(x,y) &lt;= parent(x,y).</code></pre>
+<p>然後將 (x=p, y=Johnson) 綁定後，企圖尋找前題 parent(x,Johnson).</p>
+<p>接著 parent(x,Johnson) 會再度觸發下列規則：</p>
+<pre><code>parent(x,y)   &lt;= father(x,y).</code></pre>
+<p>於是再度尋找前題 father(x,Johnson)。</p>
+<p>然後 father(x,Johnson) 會比對到 father(John, Johnson) 這個事實，於是將 x 與 John 綁定，得到 father(x=John, Johnson) 的結果。</p>
+<p>接著進行回溯，得到 parent(x=John, y=Johnson)，再回溯規則 <code>ancestor(x,y) &lt;= parent(x,y)</code> 得到新事實 ancestor(John, Johnson)。</p>
+<p>同樣的，系統也能透過類似的程序推論出 ancestor(Mary, Johnson) , ancestor(Mary, Johnson), ancestor(George, John) 等新事實。</p>
+<p>更進一步的，後向推論還可以透過下列規則得到更多更深的推論：</p>
+<pre><code>ancestor(x,z) &lt;= ancestor(x,y) &amp; parent(y,z).</code></pre>
+<p>在上述新事實的基礎上，系統可以進行下列嘗試</p>
+<pre><code>ancestor(x=George,z=Johnson) &lt;= ancestor(x=George,y=John) &amp; parent(y=John,z=Johnson).</code></pre>
+<p>然後得到「祖父級」的推論結果，也就是 ancestor(George, Johnson)。</p>
+<ol start="3" style="list-style-type: decimal">
+<li>第三種推論方法是採用 refutation 的方式，這是由羅賓遜 (John Alan Robinson) 於 1965 年所提出來的，可以用在「布林邏輯、謂詞邏輯、甚至是一階邏輯」上，而且這種方法在理論上是可以推論出所有事實的，因此是一種具有「完備性」(Complete) 的推論方法。</li>
+</ol>
+<p>Refutation 推論法是一種反證法，任何一階邏輯的算式 P 只要在系統 S 當中是真的，只要將 -P 加入該系統 S 中，就可以經由反證法導出矛盾。如果 P 在系統 S 當中不是真的，那麼將 P 加入 S 當中就無法導出矛盾。</p>
+<p>Refutation 反證法是依靠一個稱為 resolution 的邏輯規則，該規則如下所示：</p>
+<div class="figure">
+<img src="../timg/21fa3adc303f.jpg" />
+</div>
+<p>假如我們將上述算式中的 <img src="../timg/b4ffcfd79743.jpg" /> 寫為 A，將 <img src="../timg/9018c1f2e831.jpg" /> 寫為 B，則上述算式可以改寫如下：</p>
+<div class="figure">
+<img src="../timg/940130743f3d.jpg" />
+</div>
+<p>透過這樣的方式，我們可以檢驗任何一個規則 P 是否為真，只要將 -P 加入系統中，看看最後是否會導出空集合 (代表矛盾) 就行了。</p>
+<p>如果 -P 加入後導出了矛盾，那就代表 P 是個真理，於是我們就可以將 P 加入「新的事實庫」當中。</p>
+<p>可惜的是、Refutation 推論法非常耗費時間，而且不一定會停下來，有可能會造成當機的情況，因此採用 Refutation 推論法的引擎真的很少見，至少筆者還沒有見過。</p>
+<p>有了以上的認知之後，我們就可以開始實作推理引擎了。</p>
+<p>接下來我們會用 JavaScript + node.js 來設計「邏輯推論引擎與專家系統」，用程式人的角度來看看上述理論的真正意義吧！</p>
+<p>我們首先會設計一個「布林邏輯推論引擎」，然後用這個引擎建構一個「動物世界的專家系統」。</p>
+<p>接著我們會擴充到「謂詞邏輯」上，設計一個「謂詞邏輯推論引擎」，然後再用這個引擎建構出一個「家族關係的專家系統」。</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

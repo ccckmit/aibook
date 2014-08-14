@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#實作單層感知器-perceptron">實作：單層感知器 (Perceptron)</a></li>
+</ul>
+</div>
+<h2 id="實作單層感知器-perceptron"><a href="#實作單層感知器-perceptron">實作：單層感知器 (Perceptron)</a></h2>
+<h3 id="簡介"><a href="#簡介">簡介</a></h3>
+<p>Rosenblatt 於 1958 年提出第一個神經網路模型，稱為感知器，這個模型是基於 1943 年 McCulloch 與 Pitts 所提出的神經元模型，該模型的數學公式如下。</p>
+<div class="figure">
+<img src="../timg/1faa2e48aea6.jpg" />
+</div>
+<p>其中的 sign 是正負號判斷函數，若是正數則傳回 1，負數則傳回 0。</p>
+<p>請注意，在此我們所說的「感知器」是指 Rosenblatt 當時所使用的感知器，特指只有一層節點的「單層感知器」，而不是指稱那種具有隱藏層的「多層感知器」(Multilayer Perceptron)，這點必須特別澄清一下！</p>
+<p>而所謂感知器的學習，就是透過調整權重 wi 的方式，讓整個網路可以學到某個函數的方法，所以權重的調整方法是整個感知器學習行為的核心。</p>
+<h3 id="感知器的學習"><a href="#感知器的學習">感知器的學習</a></h3>
+<p>那麼、我們要怎麼讓神經網路學會某個函數呢？以下是感知器學習的演算法：</p>
+<ol style="list-style-type: decimal">
+<li><p>初始化：設定權重 <img src="../timg/c139ddae2765.jpg" /> 和臨界值 <img src="../timg/2554a2bb846c.jpg" /> 的初值之範圍為 [-0.5, 0.5]。</p></li>
+<li><p>激勵：用輸入 <img src="../timg/4ec0188cd431.jpg" /> 、權重 <img src="../timg/7f0e1a55880d.jpg" /> 與閥值 <img src="../timg/2554a2bb846c.jpg" /> 計算感知器的輸出值 Y。</p>
+<ul>
+<li><img src="../timg/856b9cd80d94.jpg" title="fig:" /></li>
+</ul></li>
+<li><p>權重修改：根據函數輸出 Yd 與感知器輸出 Y 之間的差異，進行權重調整。</p>
+<ul>
+<li><p>3.1 計算誤差 ： <img src="../timg/49e401d40cf4.jpg" /></p></li>
+<li><p>3.2 計算調整量： <img src="../timg/6fb8eb2fce33.jpg" /></p></li>
+<li><p>3.3 調整權重 ： <img src="../timg/d7d825c1b95d.jpg" /></p></li>
+</ul></li>
+<li><p>重複 2-3 步驟，直到學會為止 (如果一直學不會，只好宣告失敗)。</p></li>
+</ol>
+<h3 id="感知器模型-兩個輸入的情況"><a href="#感知器模型-兩個輸入的情況">感知器模型 (兩個輸入的情況)</a></h3>
+<p>根據以上的方法，假如感知器的輸入只有兩個 <img src="../timg/9fb86666733f.jpg" /> 那麼權重也只會有兩個 <img src="../timg/0a49adc5ecfb.jpg" /> ，於是我們可以得到下列的感知器模型：</p>
+<div class="figure">
+<img src="../img/perceptron.jpg" alt="圖、兩個輸入的感知器模型" /><p class="caption">圖、兩個輸入的感知器模型</p>
+</div>
+<p>假如我們的目標函數對於某組 (x1, x2) 的期望輸出為 yd，那麼就可以計算出誤差為 e=yd-y，於是我們可以透過下列方法調整權重。</p>
+<div class="figure">
+<img src="../timg/b1cacbe18ad7.jpg" />
+</div>
+<div class="figure">
+<img src="../timg/deff37e6fc5a.jpg" />
+</div>
+<p>可惜的是、上述的調整方法中，並沒有調整到 <img src="../timg/2554a2bb846c.jpg" /> 值，如果我們想要連 <img src="../timg/2554a2bb846c.jpg" /> 值也一並設計成可浮動的，那麼就可以將 <img src="../timg/2554a2bb846c.jpg" /> 加入到 w 中，成為 w0，，並將 x0 設為 -1，如下圖所示：</p>
+<div class="figure">
+<img src="../img/perceptron2.jpg" alt="圖、調整簡化後的感知器模型" /><p class="caption">圖、調整簡化後的感知器模型</p>
+</div>
+<p>經過上述的調整簡化之後，我們只要在調整權重時加入下列這條，就可以連 <img src="../timg/2554a2bb846c.jpg" /> 也一併調整了。</p>
+<div class="figure">
+<img src="../timg/8e42fbb23320.jpg" />
+</div>
+<p>當我們對某布林函數「真值表」中的每一個輸入，都反覆進行上述調整，最後是否能學會該「布林函數」呢？</p>
+<p>那麼、我們是否能夠用這麼簡單的方法讓感知器學會 AND、OR 與 XOR 函數呢？</p>
+<p>如果可以的話，那麼我們能不能擴大到 n 輸入的感知器上，讓感知器學會任何一個布林函數呢？</p>
+<p>如果感知器可以學會任何一個布林函數，那就會具有強大的威力了！</p>
+<p>但可惜的是，這個問題的答案是否定的，雖然感知器可以學會 AND 與 OR，但是卻不可能學會 XOR 函數。</p>
+<p>在說明這個問題的理論之前，先讓我們透過實作來體會一下感知器是如何學習 AND 與 OR 函數的，然後感受一下感知器在學 XOR 函數時發生了甚麼問題？</p>
+<p>等到瞭解了程式的運作原理之後，我們再來說明為何感知器無法學會 XOR 函數。</p>
+<h3 id="感知器實作"><a href="#感知器實作">感知器實作</a></h3>
+<p>以下我們使用 JavaScript 程式實作出感知器，其程式碼如下，您可以在 node.js 環境下執行此一程式：</p>
+<p>檔案：perceptron.js</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> log = <span class="ot">console</span>.<span class="fu">log</span>;
+
+<span class="kw">var</span> Perceptron = <span class="kw">function</span>() { <span class="co">// 感知器物件</span>
+  <span class="kw">this</span>.<span class="fu">step</span>=<span class="kw">function</span>(x, w) { <span class="co">// 步階函數：計算目前權重 w 的情況下，網路的輸出值為 0 或 1</span>
+    <span class="kw">var</span> result = w[<span class="dv">0</span>]*x[<span class="dv">0</span>]+w[<span class="dv">1</span>]*x[<span class="dv">1</span>]+w[<span class="dv">2</span>]*x[<span class="dv">2</span>]; <span class="co">// y=w0*x0+x1*w1+x2*w2=-theta+x1*w1+x2*w2</span>
+    <span class="kw">if</span> (result &gt;= <span class="dv">0</span>) <span class="co">// 如果結果大於零</span>
+      <span class="kw">return</span> <span class="dv">1</span>;      <span class="co">//   就輸出 1</span>
+    <span class="kw">else</span>             <span class="co">// 否則</span>
+      <span class="kw">return</span> <span class="dv">0</span>;      <span class="co">//   就輸出 0</span>
+  }
+  
+  <span class="kw">this</span>.<span class="fu">training</span>=<span class="kw">function</span>(truthTable) { <span class="co">// 訓練函數 training(truthTable), 其中 truthTable 是目標真值表</span>
+    <span class="kw">var</span> rate = <span class="fl">0.01</span>; <span class="co">// 學習調整速率，也就是 alpha</span>
+    <span class="kw">var</span> w = [ <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span> ]; 
+    <span class="kw">for</span> (<span class="kw">var</span> loop=<span class="dv">0</span>; loop&lt;<span class="dv">1000</span>; loop++) { <span class="co">// 最多訓練一千輪</span>
+      <span class="kw">var</span> eSum = <span class="fl">0.0</span>;
+      <span class="kw">for</span> (<span class="kw">var</span> i=<span class="dv">0</span>; i&lt;<span class="ot">truthTable</span>.<span class="fu">length</span>; i++) { <span class="co">// 每輪對於真值表中的每個輸入輸出配對，都訓練一次。</span>
+        <span class="kw">var</span> x = [ -<span class="dv">1</span>, truthTable[i][<span class="dv">0</span>], truthTable[i][<span class="dv">1</span>] ]; <span class="co">// 輸入： x</span>
+        <span class="kw">var</span> yd = truthTable[i][<span class="dv">2</span>];       <span class="co">// 期望的輸出 yd</span>
+        <span class="kw">var</span> y = <span class="kw">this</span>.<span class="fu">step</span>(x, w);  <span class="co">// 目前的輸出 y</span>
+        <span class="kw">var</span> e = yd - y;                  <span class="co">// 差距 e = 期望的輸出 yd - 目前的輸出 y</span>
+        eSum += e*e;                     <span class="co">// 計算差距總和</span>
+        <span class="kw">var</span> dw = [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span> ];            <span class="co">// 權重調整的幅度 dw</span>
+        dw[<span class="dv">0</span>] = rate * x[<span class="dv">0</span>] * e; w[<span class="dv">0</span>] += dw[<span class="dv">0</span>]; <span class="co">// w[0] 的調整幅度為 dw[0]</span>
+        dw[<span class="dv">1</span>] = rate * x[<span class="dv">1</span>] * e; w[<span class="dv">1</span>] += dw[<span class="dv">1</span>]; <span class="co">// w[1] 的調整幅度為 dw[1]</span>
+        dw[<span class="dv">2</span>] = rate * x[<span class="dv">2</span>] * e; w[<span class="dv">2</span>] += dw[<span class="dv">2</span>]; <span class="co">// w[2] 的調整幅度為 dw[2]</span>
+        <span class="kw">if</span> (loop % <span class="dv">10</span> == <span class="dv">0</span>)
+          <span class="fu">log</span>(<span class="st">&quot;%d:x=(%s,%s,%s) w=(%s,%s,%s) y=%s yd=%s e=%s&quot;</span>, loop, 
+               x[<span class="dv">0</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), x[<span class="dv">1</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), x[<span class="dv">2</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), 
+               w[<span class="dv">0</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), w[<span class="dv">1</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), w[<span class="dv">2</span>].<span class="fu">toFixed</span>(<span class="dv">3</span>), 
+               <span class="ot">y</span>.<span class="fu">toFixed</span>(<span class="dv">3</span>), <span class="ot">yd</span>.<span class="fu">toFixed</span>(<span class="dv">3</span>), <span class="ot">e</span>.<span class="fu">toFixed</span>(<span class="dv">3</span>));
+      }
+      <span class="kw">if</span> (<span class="ot">Math</span>.<span class="fu">abs</span>(eSum) &lt; <span class="fl">0.0001</span>) <span class="kw">return</span> w; <span class="co">// 當訓練結果誤差夠小時，就完成訓練了。</span>
+    }
+    <span class="kw">return</span> <span class="kw">null</span>; <span class="co">// 否則，就傳會 null 代表訓練失敗。</span>
+  }
+}
+
+<span class="kw">function</span> <span class="fu">learn</span>(tableName, truthTable) { <span class="co">// 學習主程式：輸入為目標真值表 truthTable 與其名稱 tableName。</span>
+  <span class="fu">log</span>(<span class="st">&quot;================== 學習 %s 函數 ====================&quot;</span>, tableName);
+  <span class="kw">var</span> p = <span class="kw">new</span> <span class="fu">Perceptron</span>();       <span class="co">// 建立感知器物件</span>
+  <span class="kw">var</span> w = <span class="ot">p</span>.<span class="fu">training</span>(truthTable); <span class="co">// 訓練感知器</span>
+  <span class="kw">if</span> (w != <span class="kw">null</span>)                  <span class="co">// 顯示訓練結果</span>
+    <span class="fu">log</span>(<span class="st">&quot;學習成功 !&quot;</span>);
+  <span class="kw">else</span>
+    <span class="fu">log</span>(<span class="st">&quot;學習失敗 !&quot;</span>);
+  <span class="fu">log</span>(<span class="st">&quot;w=%j&quot;</span>, w);
+}
+
+<span class="kw">var</span> andTable = [ [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span> ], [ <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span> ], [ <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span> ], [ <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span> ] ]; <span class="co">// AND 函數的真值表</span>
+<span class="kw">var</span> orTable  = [ [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span> ], [ <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span> ], [ <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span> ], [ <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span> ] ]; <span class="co">// OR  函數的真值表</span>
+<span class="kw">var</span> xorTable = [ [ <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span> ], [ <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span> ], [ <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span> ], [ <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span> ] ]; <span class="co">// XOR 函數的真值表</span>
+
+<span class="fu">learn</span>(<span class="st">&quot;and&quot;</span>, andTable); <span class="co">// 學習 AND 函數</span>
+<span class="fu">learn</span>(<span class="st">&quot;or&quot;</span>,  orTable);  <span class="co">// 學習 OR  函數</span>
+<span class="fu">learn</span>(<span class="st">&quot;xor&quot;</span>, xorTable); <span class="co">// 學習 XOR 函數</span></code></pre>
+<p>執行結果</p>
+<pre><code>D:\Dropbox\Public\web\ai\code&gt;node perceptron.js
+================== 學習 and 函數 ====================
+0:x=(-1.000,0.000,0.000) w=(1.000,0.000,0.000) y=0.000 yd=0.000 e=0.000
+0:x=(-1.000,0.000,1.000) w=(1.000,0.000,0.000) y=0.000 yd=0.000 e=0.000
+0:x=(-1.000,1.000,0.000) w=(1.000,0.000,0.000) y=0.000 yd=0.000 e=0.000
+0:x=(-1.000,1.000,1.000) w=(0.990,0.010,0.010) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,0.000,0.000) w=(0.900,0.100,0.100) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,0.000,1.000) w=(0.900,0.100,0.100) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,1.000,0.000) w=(0.900,0.100,0.100) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,1.000,1.000) w=(0.890,0.110,0.110) y=0.000 yd=1.000 e=1.000
+20:x=(-1.000,0.000,0.000) w=(0.800,0.200,0.200) y=0.000 yd=0.000 e=0.000
+20:x=(-1.000,0.000,1.000) w=(0.800,0.200,0.200) y=0.000 yd=0.000 e=0.000
+20:x=(-1.000,1.000,0.000) w=(0.800,0.200,0.200) y=0.000 yd=0.000 e=0.000
+20:x=(-1.000,1.000,1.000) w=(0.790,0.210,0.210) y=0.000 yd=1.000 e=1.000
+30:x=(-1.000,0.000,0.000) w=(0.700,0.300,0.300) y=0.000 yd=0.000 e=0.000
+30:x=(-1.000,0.000,1.000) w=(0.700,0.300,0.300) y=0.000 yd=0.000 e=0.000
+30:x=(-1.000,1.000,0.000) w=(0.700,0.300,0.300) y=0.000 yd=0.000 e=0.000
+30:x=(-1.000,1.000,1.000) w=(0.690,0.310,0.310) y=0.000 yd=1.000 e=1.000
+學習成功 !
+w=[0.6599999999999997,0.34000000000000014,0.34000000000000014]
+================== 學習 or 函數 ====================
+0:x=(-1.000,0.000,0.000) w=(1.000,0.000,0.000) y=0.000 yd=0.000 e=0.000
+0:x=(-1.000,0.000,1.000) w=(0.990,0.000,0.010) y=0.000 yd=1.000 e=1.000
+0:x=(-1.000,1.000,0.000) w=(0.980,0.010,0.010) y=0.000 yd=1.000 e=1.000
+0:x=(-1.000,1.000,1.000) w=(0.970,0.020,0.020) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,0.000,0.000) w=(0.700,0.200,0.200) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,0.000,1.000) w=(0.690,0.200,0.210) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,1.000,0.000) w=(0.680,0.210,0.210) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,1.000,1.000) w=(0.670,0.220,0.220) y=0.000 yd=1.000 e=1.000
+20:x=(-1.000,0.000,0.000) w=(0.460,0.340,0.340) y=0.000 yd=0.000 e=0.000
+20:x=(-1.000,0.000,1.000) w=(0.450,0.340,0.350) y=0.000 yd=1.000 e=1.000
+20:x=(-1.000,1.000,0.000) w=(0.440,0.350,0.350) y=0.000 yd=1.000 e=1.000
+20:x=(-1.000,1.000,1.000) w=(0.440,0.350,0.350) y=1.000 yd=1.000 e=0.000
+學習成功 !
+w=[0.37999999999999945,0.38000000000000017,0.38000000000000017]
+================== 學習 xor 函數 ====================
+0:x=(-1.000,0.000,0.000) w=(1.000,0.000,0.000) y=0.000 yd=0.000 e=0.000
+0:x=(-1.000,0.000,1.000) w=(0.990,0.000,0.010) y=0.000 yd=1.000 e=1.000
+0:x=(-1.000,1.000,0.000) w=(0.980,0.010,0.010) y=0.000 yd=1.000 e=1.000
+0:x=(-1.000,1.000,1.000) w=(0.980,0.010,0.010) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,0.000,0.000) w=(0.800,0.100,0.100) y=0.000 yd=0.000 e=0.000
+10:x=(-1.000,0.000,1.000) w=(0.790,0.100,0.110) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,1.000,0.000) w=(0.780,0.110,0.110) y=0.000 yd=1.000 e=1.000
+10:x=(-1.000,1.000,1.000) w=(0.780,0.110,0.110) y=0.000 yd=0.000 e=0.000
+...
+900:x=(-1.000,0.000,0.000) w=(0.010,-0.010,-0.000) y=1.000 yd=0.000 e=-1.000
+900:x=(-1.000,0.000,1.000) w=(-0.000,-0.010,0.010) y=0.000 yd=1.000 e=1.000
+900:x=(-1.000,1.000,0.000) w=(-0.010,-0.000,0.010) y=0.000 yd=1.000 e=1.000
+900:x=(-1.000,1.000,1.000) w=(-0.000,-0.010,-0.000) y=1.000 yd=0.000 e=-1.000
+...
+990:x=(-1.000,0.000,0.000) w=(0.010,-0.010,-0.000) y=1.000 yd=0.000 e=-1.000
+990:x=(-1.000,0.000,1.000) w=(-0.000,-0.010,0.010) y=0.000 yd=1.000 e=1.000
+990:x=(-1.000,1.000,0.000) w=(-0.010,-0.000,0.010) y=0.000 yd=1.000 e=1.000
+990:x=(-1.000,1.000,1.000) w=(-0.000,-0.010,-0.000) y=1.000 yd=0.000 e=-1.000
+學習失敗 !
+w=null</code></pre>
+<h3 id="分析"><a href="#分析">分析</a></h3>
+<p>您可以看到在上述執行結果中， AND 與 OR 兩個真值表，輸入到單層感知器進行訓練之後，都可以正確的進行學習，也就是單層感知器的輸出可以與該真值表完全一致，這代表單層感知器學習成功了。</p>
+<p>但是對於 XOR 這個真值表，單層感知器卻無法讓輸出與真值表完全一致，這也正是 Minsky 所說的，單層感知器無法正確學習 XOR 函數的原因。</p>
+<p>會產生這個現象的原因，可以用線性代數的概念解釋，下圖顯示了 AND, OR, XOR 等這三個真值表在二維線性空間的狀況，其中的粉紅色圓圈代表真值表的目標輸出值為 1，而淺藍色圓圈代表目標輸出為 0。</p>
+<div class="figure">
+<img src="../img/perceptronLinearAnalysis.jpg" alt="圖、單層感知器為何不能學習 XOR 函數的分析" /><p class="caption">圖、單層感知器為何不能學習 XOR 函數的分析</p>
+</div>
+<p>您可以看到對於 AND 與 OR 都可以用一條線將「粉紅色圓圈」與「淺藍色圓圈」分割開來。但是對 XOR 而言，由於粉紅色與淺藍色分別處於斜對角，我們沒有辦法畫出單一條線將兩者分開，這也是會何上述單層感知器在學習 XOR 這個函數上會失敗的原因了。</p>
+<h3 id="結語"><a href="#結語">結語</a></h3>
+<p>可惜的是，單層感知器並沒有辦法學會任意的布林函數，這個結果雖然令人失望，但是期望這麼簡單的模型就能擁有強大的能力，其實是一種非常天真的想法。</p>
+<p>不過、如果我們將這種單層的網路繼續擴充，變成雙層以上的網路的話，其能力就會大大的提升了，這也就是我們接下來要探討的主題，反傳遞演算法 (Back-Propagation Algorithm) 了。</p>
+<h3 id="參考文獻"><a href="#參考文獻">參考文獻</a></h3>
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Perceptron">Wikipedia:Perceptron</a></li>
+<li><a href="http://zh.wikipedia.org/wiki/%E6%84%9F%E7%9F%A5%E5%99%A8">維基百科：感知器</a></li>
+</ul>
+<p>【本文由陳鍾誠取材並修改自 [維基百科]，採用創作共用的 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/">姓名標示、相同方式分享</a> 授權】</p>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>

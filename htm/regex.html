@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="../css/book.css" type="text/css" />
+</head>
+<body>
+<div id="header_wrap">
+  <h1><a href="book.html">人工智慧 - 採用 JavaScript 實作</a></h1>
+  <table id="bar" border="0" style="border:0;"><tr style="border:0;">
+    <td style="text-align:left;border:0;"> <a href="book.html">目錄</a> | <a href="download.html">下載</a></td>
+    <td style="text-align:right;border:0;"><a href="http://ccckmit.wikidot.com/">陳鍾誠</a> 於 <a href="http://www.nqu.edu.tw/">金門大學</a></td>
+  </tr></table>
+</div>
+<div id="content">
+<div id="TOC">
+<ul>
+<li><a href="#javascript-與正規表達式">JavaScript 與正規表達式</a></li>
+</ul>
+</div>
+<h1 id="javascript-與正規表達式"><a href="#javascript-與正規表達式">JavaScript 與正規表達式</a></h1>
+<p>正規語法 (Regular Grammar) 是一種相當簡單的語法，這種語法被 Perl 語言成功的用於字串比對，接著成為重要的程式設計工具。 此種標準的正規語法後來被稱為正則表達式 (Regular Expression)。目前，大部分的語言都已納入正則表達式的函式庫， 正規表達是可以說是程式設計師必定要瞭解的工具，也就是常識的一部分。系統程式設計師更應該要瞭解正則表達式， 因為正規語法是程式語言當中，用來描述基本詞彙 (Vocabulary)，並據以建構詞彙掃描器 (Lexer) 的基礎語法， Lexer 是編譯器的基本元件之一。</p>
+<p>假如我們要用正則表達式描述整數數字，那麼，可以用 [0123456789]+ 這個表達式，其中的中括號 [ 與 ] 會框住一群 字元，用來代表字元群，加號 + 所代表的是重複 1 次或以上，因此，該表達式就可以描述像 3702451 這樣的數字。 然而，在正則表達式中，為了更方便撰寫，於是允許用 [0-9]+ 這樣的式子表達同樣的概念，其中的 0-9 其實就 代表了 0123456789 等字元，這是一種簡便的縮寫法。甚至，可以再度縮短後以 []+ 代表，其中的 就代表 數字所成的字元集合。</p>
+<p>利用範例學習是理解正則表達式的有效方法，表格 1 就顯示了一些具有代表性的正則表達式範例。</p>
+<p>表格 1. 正則表達式的範例</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">語法</th>
+<th align="left">正規表達式 範</th>
+<th align="left">例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">整數</td>
+<td align="left">[0-9]+</td>
+<td align="left">3704</td>
+</tr>
+<tr class="even">
+<td align="left">有小數點的實數</td>
+<td align="left">[0-9]+.[0-9]+</td>
+<td align="left">7.93</td>
+</tr>
+<tr class="odd">
+<td align="left">英文詞彙</td>
+<td align="left">[A-Za-z]+</td>
+<td align="left">Code</td>
+</tr>
+<tr class="even">
+<td align="left">變數名稱</td>
+<td align="left">[A-Za-z_][A-Za-z0-9_]*</td>
+<td align="left">_counter</td>
+</tr>
+<tr class="odd">
+<td align="left">Email</td>
+<td align="left">[a-zA-Z0-9_]+@[a-zA-Z0-9._]+</td>
+<td align="left">ccc@kmit.edu.tw</td>
+</tr>
+<tr class="even">
+<td align="left">URL</td>
+<td align="left">http://[a-zA-Z0-9./_]+</td>
+<td align="left">http://ccc.kmit.edu.tw/mybook/</td>
+</tr>
+</tbody>
+</table>
+<p>為了協助讀者理解這些範例，我們有必要對範例中的一些正規表達式符號進行說明。</p>
+<p>在實數的範例中，使用 <code>\.</code> 代表小數點符號 <code>.</code>，不熟悉正則表達式的讀者一定覺得奇怪，為何要加上斜線符號 <code>\</code> 呢？ 這是因為在正則表達式當中，有許多符號具有特殊意義，例如點符號 <code>.</code> 是用來表示任意字元的，星號 <code>*</code> 是代表 0 次 或以上，加號 + 代表一次或以上，在正則表達式當中，有許多這類的特殊字元，因此用斜線  代表跳出字元，就像 C 語言當中 printf 函數內的用途一樣。因此，當我們看到  符號時，必須繼續向後看，才能知道其所代表的意義。表格 2 列出了正則表達式當中大部份的重要符號之意義，以供讀者參考。</p>
+<p>表格 2. 正則表達式當中的符號之意義</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">字元</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">^</td>
+<td align="left">比對開始位置</td>
+</tr>
+<tr class="even">
+<td align="left">$</td>
+<td align="left">比對結束位置。</td>
+</tr>
+<tr class="odd">
+<td align="left">*</td>
+<td align="left">零次或以上</td>
+</tr>
+<tr class="even">
+<td align="left">+</td>
+<td align="left">一次或以上</td>
+</tr>
+<tr class="odd">
+<td align="left">?</td>
+<td align="left">零次或一次</td>
+</tr>
+<tr class="even">
+<td align="left">{n}</td>
+<td align="left">n 次。</td>
+</tr>
+<tr class="odd">
+<td align="left">{n,}</td>
+<td align="left">n 次或以上</td>
+</tr>
+<tr class="even">
+<td align="left">{n,m}</td>
+<td align="left">n 到 m 次</td>
+</tr>
+<tr class="odd">
+<td align="left">?</td>
+<td align="left">非貪婪模式</td>
+</tr>
+<tr class="even">
+<td align="left">.</td>
+<td align="left">比對除&quot;&quot;之外字元</td>
+</tr>
+<tr class="odd">
+<td align="left">(?:pattern)</td>
+<td align="left">比對 pattern 樣式</td>
+</tr>
+<tr class="even">
+<td align="left">(?=pattern)</td>
+<td align="left">正向預查，例如，&quot;Windows (?=95|98|NT|2000)&quot; 可比對到 &quot;Windows 2000&quot; 中的 &quot;Windows&quot;，但不能比對 Windows XP 中的 Windows。</td>
+</tr>
+<tr class="odd">
+<td align="left">(?!pattern)</td>
+<td align="left">負向預查，例如 &quot;Windows(?!95|98|NT|2000)&quot; 能比對 &quot;Windows XP&quot;中的 &quot;Windows&quot;，但不能比對 &quot;Windows 2000&quot; 中 的&quot;Windows&quot;。</td>
+</tr>
+<tr class="even">
+<td align="left">x|y</td>
+<td align="left">比對 x 或 y。</td>
+</tr>
+<tr class="odd">
+<td align="left">[xyz]</td>
+<td align="left">包含 xyz 等字元。</td>
+</tr>
+<tr class="even">
+<td align="left">[^xyz]</td>
+<td align="left">不包含 xyz 等字元。</td>
+</tr>
+<tr class="odd">
+<td align="left">[a-z]</td>
+<td align="left">字元範圍 a-z。</td>
+</tr>
+<tr class="even">
+<td align="left">[^a-z]</td>
+<td align="left">不包含字元範圍 a-z。</td>
+</tr>
+<tr class="odd">
+<td align="left">\b</td>
+<td align="left">比對一個單詞邊界，也就是指單詞和空格間的位置。例如，&quot;er&quot;可以比對&quot;never&quot;中的&quot;er&quot;，但不能比對&quot;verb&quot;中的&quot;er&quot;。</td>
+</tr>
+<tr class="even">
+<td align="left">\B</td>
+<td align="left">比對非單詞邊界。&quot;er&quot;能比對&quot;verb&quot;中的&quot;er&quot;，但不能比對&quot;never&quot;中的&quot;er&quot;。</td>
+</tr>
+<tr class="odd">
+<td align="left">\cx</td>
+<td align="left">比對由x指明的控制字元。例如，-M或回車符。x的值必須為A-Z或a-z之一。否則，將c視為一個原義的&quot;c&quot;字元。</td>
+</tr>
+<tr class="even">
+<td align="left">\d</td>
+<td align="left">比對一個數位字元。等價於[0-9]。</td>
+</tr>
+<tr class="odd">
+<td align="left">\D</td>
+<td align="left">比對一個非數位字元。等價於[^0-9]。</td>
+</tr>
+<tr class="even">
+<td align="left">\f</td>
+<td align="left">比對一個換頁符。等價於0c和。</td>
+</tr>
+<tr class="odd">
+<td align="left">\n</td>
+<td align="left">比對一個分行符號。等價於0a和。</td>
+</tr>
+<tr class="even">
+<td align="left">\r</td>
+<td align="left">比對一個回車符。等價於0d和。</td>
+</tr>
+<tr class="odd">
+<td align="left">\s</td>
+<td align="left">比對任何空白字元，包括空格、定位字元、換頁符等等。等價於[]。</td>
+</tr>
+<tr class="even">
+<td align="left">\S</td>
+<td align="left">比對任何非空白字元。等價於[^\f\n\r\t\v]。</td>
+</tr>
+<tr class="odd">
+<td align="left">\t</td>
+<td align="left">比對一個定位字元。等價於09和。</td>
+</tr>
+<tr class="even">
+<td align="left">\v</td>
+<td align="left">比對一個垂直定位字元。等價於0b和。</td>
+</tr>
+<tr class="odd">
+<td align="left">\w</td>
+<td align="left">比對包括底線的任何單詞字元。等價於&quot;[A-Za-z0-9_]&quot;。</td>
+</tr>
+<tr class="even">
+<td align="left">\W</td>
+<td align="left">比對任何非單詞字元。等價於&quot;[^A-Za-z0-9_]&quot;。</td>
+</tr>
+<tr class="odd">
+<td align="left">\xn</td>
+<td align="left">比對n，其中n為十六進位轉義值。十六進位轉義值必須為確定的兩個數位長。例如，&quot;41&quot;比對&quot;A&quot;。&quot;041&quot;則等價於&quot;04&quot;&amp;&quot;1&quot;。規則運算式中可以使用ASCII編碼。</td>
+</tr>
+<tr class="even">
+<td align="left">\num</td>
+<td align="left">比對num，其中num是一個正整數。對所獲取的比對的引用。例如，&quot;(.)&quot;比對兩個連續的相同字元。</td>
+</tr>
+<tr class="odd">
+<td align="left">\n</td>
+<td align="left">標識一個八進制轉義值或一個向後引用。如果，則n為向後引用。否則，如果n為八進位數字(0-7)，則n為一個八進制轉義值。</td>
+</tr>
+<tr class="even">
+<td align="left">\nm</td>
+<td align="left">標識一個八進制轉義值或一個向後引用。 如果，則nm為向後引用。如果，則n為一個後跟文字m的向後引用。如果前面的條件都不滿足，若n和m均為八進位數字(0-7)，則將比對八進制轉義值nm。</td>
+</tr>
+<tr class="odd">
+<td align="left">\nml</td>
+<td align="left">如果n為八進位數字(0-3)，且m和l均為八進位數字(0-7)，則比對八進制轉義值nml。</td>
+</tr>
+<tr class="even">
+<td align="left">\un</td>
+<td align="left">比對n，其中n是一個用四個十六進位數位表示的Unicode字元。例如，00A9比對版權符號（©）。</td>
+</tr>
+</tbody>
+</table>
+<p>正則表達式在許多語言當中 (像是 Java, C#, Ruby, Python 等) 都已經有支援良好的函式庫，然而，在標準 C 語言的函式庫當中卻沒有這方面的函數，因此，我們使用 C# 這個語言說明正則表達式的用法。</p>
+<p>範例 1. 在 Node.js (JavaScript) 當中使用正則表達式進行樣式抽取的程式範例</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> log=<span class="ot">console</span>.<span class="fu">log</span>;
+
+<span class="kw">var</span> str = <span class="st">&quot;name:john tel:02-3713567 email:john@abc.com age:38&quot;</span>;
+<span class="fu">log</span>(<span class="st">&quot;%j&quot;</span>, <span class="ot">str</span>.<span class="fu">match</span>(<span class="ot">/name:</span><span class="fl">(</span><span class="bn">[a-zA-Z]</span><span class="fl">+)</span><span class="ot">/</span>));
+<span class="fu">log</span>(<span class="st">&quot;%j&quot;</span>, <span class="ot">str</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="bn">[0-9</span><span class="fl">\-</span><span class="bn">]</span><span class="fl">{7,}</span><span class="ot">/</span>));
+<span class="fu">log</span>(<span class="st">&quot;%j&quot;</span>, <span class="ot">str</span>.<span class="fu">match</span>(<span class="ot">/</span><span class="bn">[a-zA-Z0-9]</span><span class="fl">+</span><span class="ot">@</span><span class="bn">[a-zA-Z0-9</span><span class="fl">\.</span><span class="bn">]</span><span class="fl">+</span><span class="ot">/</span>));</code></pre>
+<p>執行結果</p>
+<pre><code>C:\Dropbox\Public\web\ai\code\regex&gt;node regex.js
+[&quot;name:john&quot;,&quot;john&quot;]
+[&quot;02-3713567&quot;]
+[&quot;john@abc.com&quot;]</code></pre>
+</div>
+<div id="footer">
+<a href="http://ccckmit.wikidot.com">陳鍾誠</a>衍生自<a href="http://zh.wikipedia.org/">維基百科</a>之作品：採用 <a href="http://creativecommons.org/licenses/by-sa/3.0/tw/ ">創作共用：姓名標示、相同方式分享</a> 的 <a href="license.html">授權方式</a>。
+</div>
+</body>
+</html>
